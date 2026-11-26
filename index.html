@@ -245,12 +245,12 @@ select{width:auto}
 <script>
 /* ============ CONFIGURATION PREMIUM & MOBILE MONEY (CÔTE D'IVOIRE) ============ */
 const CONFIG={
-  priceLabel:"10 000 FCFA / mois",
+  priceLabel:"5 000 FCFA / mois",
   momoNumber:"+225 07 57 33 37 36",
   momoRaw:"2250757333736",
   /* Codes valides générés :
      - CLW-2026-VIP1
-     - CLW-WAVE-10000
+     - CLW-WAVE-5000
      - CLW-OMCI-2026
      - CLW-GOLD-9001
      - CLW-PRO1-2026
@@ -297,12 +297,12 @@ let lastFocus=null;
 function closePaywall(){const m=document.getElementById('paywall');if(m){m.remove();if(lastFocus&&lastFocus.focus)lastFocus.focus();}}
 function paywall(feature){
   closePaywall();lastFocus=document.activeElement;
-  const waMsg=encodeURIComponent(`Bonjour Clearway English ! Je viens d'effectuer le paiement de 10 000 FCFA pour mon abonnement Premium (1 mois). Merci de m'envoyer mon code d'activation.`);
+  const waMsg=encodeURIComponent(`Bonjour Clearway English ! Je viens d'effectuer le paiement de 5 000 FCFA pour mon abonnement Premium (1 mois). Merci de m'envoyer mon code d'activation.`);
   const m=document.createElement('div');m.id='paywall';m.className='modal';
   m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pwt">
     <button class="x" data-act="pwclose" aria-label="Fermer">×</button>
     <h2 id="pwt">Passer à Clearway Premium</h2>
-    <p class="mut small" style="margin:4px 0 0">${feature?'Débloquez : <b>'+esc(feature)+'</b> et tout le programme complet.':'Accédez à l'intégralité du programme sur 3 mois sans restriction.'}</p>
+    <p class="mut small" style="margin:4px 0 0">${feature?'Débloquez : <b>'+esc(feature)+'</b> et tout le programme complet.':'Accédez à l\'intégralité du programme sur 3 mois sans restriction.'}</p>
     
     <div class="price-tag">
       <div><span class="small">Abonnement tout inclus</span><br><b>${esc(CONFIG.priceLabel)}</b></div>
@@ -317,7 +317,7 @@ function paywall(feature){
     </ul>
 
     <div class="momo-box">
-      <div class="small" style="font-weight:600;margin-bottom:6px">1. Effectuez votre dépôt de 10 000 FCFA via :</div>
+      <div class="small" style="font-weight:600;margin-bottom:6px">1. Effectuez votre dépôt de 5 000 FCFA via :</div>
       <div class="momo-badges">
         <span class="badge-wave">📱 Wave Côte d'Ivoire</span>
         <span class="badge-om">🟠 Orange Money</span>
@@ -358,7 +358,7 @@ function premBanner(){
       <h3>Passez à la vitesse supérieure avec Clearway Premium</h3>
       <p class="mut" style="margin:4px 0 0;max-width:58ch">Débloquez les <b>90 jours de séquences guidées</b>, les 100 mots de vocabulaire, le coach vocal et tous les examens blancs pour seulement <b>${esc(CONFIG.priceLabel)}</b> (Wave / Orange Money).</p>
     </div>
-    <button class="btn" data-act="paywall" data-f="">Activer Premium (10 000 F)</button>
+    <button class="btn" data-act="paywall" data-f="">Activer Premium (5 000 F)</button>
   </div>`;
 }
 
@@ -785,7 +785,7 @@ const SPEAKING_PROMPTS=[
   {lv:"B1",cat:"Travail",en:"I would like to schedule a meeting to discuss our new project.",fr:"J'aimerais planifier une réunion pour discuter de notre nouveau projet."},
   {lv:"B1",cat:"Opinion",en:"In my opinion, learning English opens many international opportunities.",fr:"À mon avis, apprendre l'anglais ouvre de nombreuses opportunités internationales."},
   {lv:"B2",cat:"Entretien",en:"I am a reliable team player with strong problem-solving skills.",fr:"Je suis un équipier fiable avec de solides compétences en résolution de problèmes."},
-  {lv:"C1",cat:"Négociation",en:"Although the budget is tight, we are confident we can deliver on time.",fr:"Bien que le budget serré, nous sommes convaincus de pouvoir livrer à temps."}
+  {lv:"C1",cat:"Négociation",en:"Although the budget is tight, we are confident we can deliver on time.",fr:"Bien que le budget soit serré, nous sommes convaincus de pouvoir livrer à temps."}
 ];
 
 /* ============ Données : writing ============ */
@@ -794,59 +794,26 @@ const WRITINGS=[
   fr:"Écrivez un e-mail à un ami pour raconter vos dernières vacances.",
   en:"Write an email to a friend about your last holiday. Say where you went, what you did and what you liked.",
   phrases:["I hope you're well.","Last summer I went to…","The weather was…","We visited…","I really enjoyed…","Write soon!"],
-  checks:[["Une formule d'accueil (Hi, Hello, Dear…)",/(hi|hello|dear)/i],["Des verbes au passé (went, visited, was…)",/(was|were|went|visited|had|saw|ate|did|enjoyed|stayed)/i],["Une formule de fin (See you, Take care…)",/(best wishes|see you|take care|love|regards|bye|write soon)/i]],
-  model:"Hi Sophie,
-
-I hope you're well! I'm writing to tell you about my holiday in Grand-Bassam. Last August, my brother and I went there for a week. The weather was hot and sunny, so we spent a lot of time by the beach.
-
-We visited the historic district and bought local crafts. I also tried fresh grilled fish, and it was delicious! I really enjoyed the trip, and I want to go back next year.
-
-What about you? Did you go anywhere this summer?
-
-Take care,
-Kouakou"},
+  checks:[["Une formule d'accueil (Hi, Hello, Dear…)",/\b(hi|hello|dear)\b/i],["Des verbes au passé (went, visited, was…)",/\b(was|were|went|visited|had|saw|ate|did|enjoyed|stayed)\b/i],["Une formule de fin (See you, Take care…)",/\b(best wishes|see you|take care|love|regards|bye|write soon)\b/i]],
+  model:"Hi Sophie,\n\nI hope you're well! I'm writing to tell you about my holiday in Grand-Bassam. Last August, my brother and I went there for a week. The weather was hot and sunny, so we spent a lot of time by the beach.\n\nWe visited the historic district and bought local crafts. I also tried fresh grilled fish, and it was delicious! I really enjoyed the trip, and I want to go back next year.\n\nWhat about you? Did you go anywhere this summer?\n\nTake care,\nKouakou"},
  {id:'w2',lv:'B1',title:"Donner son opinion",min:100,
   fr:"Donnez votre opinion argumentée sur un sujet de société.",
   en:"Do you think students should wear school uniforms? Give your opinion and support it with reasons and examples.",
   phrases:["In my opinion,","I strongly believe that…","For example,","On the other hand,","Moreover,","In conclusion,"],
-  checks:[["Une expression d'opinion (I think, In my opinion…)",/(in my opinion|i think|i believe|i feel|personally|i agree|i disagree)/i],["Des connecteurs (because, however, for example…)",/(because|however|therefore|for example|firstly|moreover|on the other hand|as a result)/i],["Une conclusion (In conclusion, Overall…)",/(in conclusion|to sum up|overall|to conclude|finally)/i]],
-  model:"In my opinion, school uniforms are a good idea, although they are not perfect.
-
-Firstly, uniforms make students feel equal. When everybody wears the same clothes, nobody is judged because of expensive brands. For example, in my school, there was much less pressure to buy fashionable clothes. Moreover, getting dressed in the morning is quicker and cheaper for families.
-
-On the other hand, some people say that uniforms limit self-expression. This is true, but students can still show their personality through their hobbies, their ideas and their behaviour.
-
-In conclusion, I believe that the advantages of uniforms are greater than the disadvantages, because they encourage equality and save time and money."},
+  checks:[["Une expression d'opinion (I think, In my opinion…)",/\b(in my opinion|i think|i believe|i feel|personally|i agree|i disagree)\b/i],["Des connecteurs (because, however, for example…)",/\b(because|however|therefore|for example|firstly|moreover|on the other hand|as a result)\b/i],["Une conclusion (In conclusion, Overall…)",/\b(in conclusion|to sum up|overall|to conclude|finally)\b/i]],
+  model:"In my opinion, school uniforms are a good idea, although they are not perfect.\n\nFirstly, uniforms make students feel equal. When everybody wears the same clothes, nobody is judged because of expensive brands. For example, in my school, there was much less pressure to buy fashionable clothes. Moreover, getting dressed in the morning is quicker and cheaper for families.\n\nOn the other hand, some people say that uniforms limit self-expression. This is true, but students can still show their personality through their hobbies, their ideas and their behaviour.\n\nIn conclusion, I believe that the advantages of uniforms are greater than the disadvantages, because they encourage equality and save time and money."},
  {id:'w3',lv:'B2',title:"Essai argumenté",min:150,
   fr:"Rédigez un essai structuré : introduction, arguments, contre-arguments, conclusion.",
   en:"'Social media does more harm than good.' To what extent do you agree? Write a structured essay.",
   phrases:["It is often claimed that…","Admittedly,","Nevertheless,","Whereas…","Such as…","All things considered,"],
-  checks:[["Une introduction qui pose le sujet",/(nowadays|it is often (said|claimed)|in recent years|this essay|today)/i],["Un contraste (although, whereas, nevertheless…)",/(although|whereas|nevertheless|despite|while|on the other hand|however)/i],["Un exemple (for instance, such as…)",/(for instance|for example|such as)/i],["Une conclusion",/(in conclusion|to sum up|all things considered|overall|to conclude)/i]],
-  model:"Nowadays, social media platforms shape how we communicate, work and even think. It is often claimed that they do more harm than good, but the reality is more nuanced.
-
-Admittedly, the risks are serious. Excessive use is linked to anxiety, particularly among teenagers, and false information spreads faster than corrections. Furthermore, constant comparison with other people's carefully selected lives can damage self-esteem.
-
-Nevertheless, social media also brings real benefits. Isolated people can find supportive communities, small businesses can reach customers worldwide, and during emergencies, platforms allow authorities to share urgent information.
-
-All things considered, I agree only partly with the statement. The harm is real, but it comes mainly from how platforms are designed and used. With better regulation and digital education, the benefits could outweigh the damage."},
+  checks:[["Une introduction qui pose le sujet",/\b(nowadays|it is often (said|claimed)|in recent years|this essay|today)\b/i],["Un contraste (although, whereas, nevertheless…)",/\b(although|whereas|nevertheless|despite|while|on the other hand|however)\b/i],["Un exemple (for instance, such as…)",/\b(for instance|for example|such as)\b/i],["Une conclusion",/\b(in conclusion|to sum up|all things considered|overall|to conclude)\b/i]],
+  model:"Nowadays, social media platforms shape how we communicate, work and even think. It is often claimed that they do more harm than good, but the reality is more nuanced.\n\nAdmittedly, the risks are serious. Excessive use is linked to anxiety, particularly among teenagers, and false information spreads faster than corrections. Furthermore, constant comparison with other people's carefully selected lives can damage self-esteem.\n\nNevertheless, social media also brings real benefits. Isolated people can find supportive communities, small businesses can reach customers worldwide, and during emergencies, platforms allow authorities to share urgent information.\n\nAll things considered, I agree only partly with the statement. The harm is real, but it comes mainly from how platforms are designed and used. With better regulation and digital education, the benefits could outweigh the damage."},
  {id:'w4',lv:'B2',title:"E-mail professionnel",min:80,
   fr:"Rédigez un e-mail formel à un client pour demander un rendez-vous.",
   en:"Write a formal email to a client's manager to request a meeting about a delayed order. Be polite and suggest two possible dates.",
   phrases:["Dear Mr/Ms …,","I am writing to…","Would it be possible to…?","I would appreciate it if…","Thank you for your understanding.","Kind regards,"],
-  checks:[["Une formule d'appel formelle (Dear Mr/Ms…)",/dear/i],["Une demande polie (Would it be possible…, I would like to…)",/(would it be possible|could we|i would like to|i would appreciate|could you)/i],["Un remerciement",/(thank you|thanks|grateful|appreciate)/i],["Une formule de politesse finale (Kind regards…)",/(kind regards|best regards|yours sincerely|yours faithfully|sincerely)/i]],
-  model:"Subject: Request for a meeting – Order no. 4587
-
-Dear Ms Carter,
-
-I am writing regarding order no. 4587, which was due to arrive on 12 March. Unfortunately, we have been informed that the delivery will be delayed by two weeks.
-
-Would it be possible to arrange a short meeting to discuss a solution? I could be available on Tuesday 18 March at 10 a.m. or on Thursday 20 March at 2 p.m. We can also meet by video call if you prefer.
-
-I would appreciate it if you could let me know which date suits you best. Thank you for your understanding.
-
-Kind regards,
-Julien Moreau
-Sales Manager"}
+  checks:[["Une formule d'appel formelle (Dear Mr/Ms…)",/\bdear\b/i],["Une demande polie (Would it be possible…, I would like to…)",/\b(would it be possible|could we|i would like to|i would appreciate|could you)\b/i],["Un remerciement",/\b(thank you|thanks|grateful|appreciate)\b/i],["Une formule de politesse finale (Kind regards…)",/\b(kind regards|best regards|yours sincerely|yours faithfully|sincerely)\b/i]],
+  model:"Subject: Request for a meeting – Order no. 4587\n\nDear Ms Carter,\n\nI am writing regarding order no. 4587, which was due to arrive on 12 March. Unfortunately, we have been informed that the delivery will be delayed by two weeks.\n\nWould it be possible to arrange a short meeting to discuss a solution? I could be available on Tuesday 18 March at 10 a.m. or on Thursday 20 March at 2 p.m. We can also meet by video call if you prefer.\n\nI would appreciate it if you could let me know which date suits you best. Thank you for your understanding.\n\nKind regards,\nJulien Moreau\nSales Manager"}
 ];
 const CONNECTORS=["however","therefore","moreover","furthermore","although","because","firstly","secondly","finally","in addition","for example","for instance","on the other hand","nevertheless","despite","whereas","while","in conclusion","as a result","besides","admittedly","such as"];
 const STOP=new Set("the a an and or but to of in on at for with is are was were be been it this that i you he she we they my your his her our their as by from not have has had do does did will would can could so if than then there what which who".split(" "));
@@ -1199,7 +1166,7 @@ V.reading=()=>{
   }
   const r=READINGS.find(x=>x.id===id);
   const keys=Object.keys(r.gloss).sort((a,b)=>b.length-a.length);
-  const re=new RegExp('\b('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\]/g,'\$&')).join('|')+')\b','gi');
+  const re=new RegExp('\\b('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
   const html=esc(r.text).replace(re,m=>`<span class="gl" data-act="gloss" data-w="${m.toLowerCase()}" tabindex="0">${m}</span>`);
   $('#view').innerHTML=`<button class="btn ghost sm" data-act="rback">← Tous les textes</button>
   <div class="pagehead" style="margin-top:16px"><h1>${r.title}</h1><p>${lvBadge(r.lv)} &nbsp;Lecture ≈ ${r.min} min</p></div>
@@ -1238,8 +1205,7 @@ V.listening=()=>{
     <label class="small mut">Vitesse <select id="lrate"><option value="0.7">Lente</option><option value="0.85">Un peu lente</option><option value="1" selected>Normale</option><option value="1.2">Rapide</option></select></label></div>
     <p class="small mut" style="margin-top:12px">Écoutez 2 ou 3 fois avant de répondre. Affichez la transcription seulement en dernier recours.</p>
     <button class="btn ghost sm" data-act="ltrans">Afficher / masquer la transcription</button>
-    <div id="trans" class="model" style="display:none;margin-top:12px">${x.lines.map(l=>esc(l.t)).join('
-')}</div></div>
+    <div id="trans" class="model" style="display:none;margin-top:12px">${x.lines.map(l=>esc(l.t)).join('\n')}</div></div>
   <div class="card"><h2>Questions</h2><div id="quiz"></div></div></div>`;
   runQuiz($('#quiz'),x.qs,{});
 };
@@ -1247,7 +1213,7 @@ V.listening=()=>{
 /* ============ Writing ============ */
 V.writing=()=>{
   const W=S.write,t=WRITINGS.find(x=>x.id===W.task),txt=W.texts[t.id]||'';
-  const words=(txt.trim().match(/[\w'’-]+/g)||[]).length;
+  const words=(txt.trim().match(/\b[\w'’-]+\b/g)||[]).length;
   $('#view').innerHTML=head("Writing","Choisissez un sujet, rédigez en anglais, puis obtenez une analyse automatique : longueur, structure et connecteurs.")+
   `<div class="tabs">${WRITINGS.map(w=>`<button class="chip ${w.id===t.id?'on':''}" data-act="wtask" data-id="${w.id}">${w.title} · ${w.lv}${lk('write',w.id)}</button>`).join('')}</div>
   <div class="split"><div>
@@ -1261,11 +1227,11 @@ V.writing=()=>{
   <div class="card" id="wreport">${W.reports[t.id]||'<h2>Analyse</h2><p class="mut">Rédigez votre texte puis touchez « Analyser mon texte ». Vous verrez ici le nombre de mots, les éléments attendus et les connecteurs utilisés.</p>'}</div></div>`;
 };
 function analyzeWriting(t,txt){
-  const words=txt.trim().match(/[\w'’-]+/g)||[];
+  const words=txt.trim().match(/\b[\w'’-]+\b/g)||[];
   const n=words.length;
   const sents=(txt.match(/[^.!?]+[.!?]+/g)||[txt]).filter(s=>s.trim()).length;
   const low=txt.toLowerCase();
-  const used=CONNECTORS.filter(c=>new RegExp('\b'+c+'\b').test(low));
+  const used=CONNECTORS.filter(c=>new RegExp('\\b'+c+'\\b').test(low));
   const freq={};words.forEach(w=>{w=w.toLowerCase();if(w.length>3&&!STOP.has(w))freq[w]=(freq[w]||0)+1;});
   const rep=Object.entries(freq).filter(e=>e[1]>=4).sort((a,b)=>b[1]-a[1]).slice(0,4);
   const checks=t.checks.map(c=>[c[0],c[1].test(txt)]);
@@ -1285,7 +1251,7 @@ function analyzeWriting(t,txt){
    <h3 style="margin:14px 0 4px">Éléments attendus</h3>
    ${checks.map(c=>`<div class="check"><i class="${c[1]?'y':'n'}">${c[1]?'✓':'–'}</i><span>${c[0]}</span></div>`).join('')}
    <h3 style="margin:14px 0 4px">Connecteurs trouvés</h3>
-   <p>${used.length?used.map(u=>`<span class="lv lv-B" style="margin:0 4px 4px 0">${u}</span>`).join(''):'<span class="mut">Aucun pour l'instant.</span>'}</p>
+   <p>${used.length?used.map(u=>`<span class="lv lv-B" style="margin:0 4px 4px 0">${u}</span>`).join(''):'<span class="mut">Aucun pour l\'instant.</span>'}</p>
    <h3 style="margin:14px 0 4px">Conseils</h3>${tips.map(x=>`<p>• ${esc(x)}</p>`).join('')}`;
 }
 
@@ -1424,7 +1390,7 @@ const A={
  gloss:t=>{const r=READINGS.find(x=>x.id===S.read.open);$('#gloss').innerHTML=`<b>${esc(t.dataset.w)}</b> — ${esc(r.gloss[t.dataset.w])}`;speak(t.dataset.w,0.9);},
  /* listening */
  ltab:t=>{S.listen.tab=t.dataset.t;S.listen.open=null;render();},
- lopen:t=>{if(isLocked('listen',t.dataset.id))return paywall('Cet exercice d'écoute');S.listen.open=t.dataset.id;render(true);},
+ lopen:t=>{if(isLocked('listen',t.dataset.id))return paywall('Cet exercice d\'écoute');S.listen.open=t.dataset.id;render(true);},
  lback:()=>{S.listen.open=null;render(true);},
  lplay:()=>{const x=LISTENS.find(a=>a.id===S.listen.open);playLines(x.lines,parseFloat($('#lrate').value));},
  ltrans:()=>{const e=$('#trans');e.style.display=e.style.display==='none'?'block':'none';},
@@ -1445,7 +1411,7 @@ const A={
  dnext:()=>{if(!S.premium&&S.listen.dict+1>=CONFIG.free.dictN)return paywall('Les dictées suivantes');S.listen.dict++;render();},
  dreset:()=>{S.listen.dict=0;render();},
  /* writing */
- wtask:t=>{if(isLocked('write',t.dataset.id))return paywall('Ce sujet d'écriture');S.write.task=t.dataset.id;render();},
+ wtask:t=>{if(isLocked('write',t.dataset.id))return paywall('Ce sujet d\'écriture');S.write.task=t.dataset.id;render();},
  wphrase:t=>{const ta=$('#wtext');ta.value+=(ta.value&&!/\s$/.test(ta.value)?' ':'')+t.dataset.p+' ';ta.focus();ta.dispatchEvent(new Event('input'));},
  wmodel:()=>{const W=S.write;W.model[W.task]=!W.model[W.task];render();},
  wanalyze:()=>{
@@ -1474,7 +1440,7 @@ const A={
    const v=normCode($('#pwcode').value);
    if(v.length<6){$('#pwmsg').textContent="Saisissez votre code d'accès.";return;}
    // Vérification par empreinte ou codes maîtres
-   const masterCodes=['CLW2026VIP1','CLWWAVE10000','CLWOMCI2026','CLWGOLD9001','CLWPRO12026','CLWFAST3373','CLWABID2026','CLW90JSVIP8'];
+   const masterCodes=['CLW2026VIP1','CLWWAVE5000','CLWOMCI2026','CLWGOLD9001','CLWPRO12026','CLWFAST3373','CLWABID2026','CLW90JSVIP8'];
    if(CONFIG.codeHashes.includes(String(cyrb53(v))) || masterCodes.includes(v)){
      S.premium=true;store.set(STORE_PREM,'1');closePaywall();toast('🎉 Félicitations ! Accès Premium activé.');render();
    }else{$('#pwmsg').textContent="Code invalide. Vérifiez votre code ou contactez le +225 07 57 33 37 36.";}
@@ -1496,7 +1462,7 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('input',e=>{
   if(e.target.id==='wtext'){
     const t=WRITINGS.find(x=>x.id===S.write.task);S.write.texts[t.id]=e.target.value;
-    const n=(e.target.value.trim().match(/[\w'’-]+/g)||[]).length;
+    const n=(e.target.value.trim().match(/\b[\w'’-]+\b/g)||[]).length;
     $('#wcount').textContent=`${n} / ${t.min} mots minimum`;
   }
 });
