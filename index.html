@@ -1925,6 +1925,91 @@ document.addEventListener('input',e=>{
 })();
 
 
+/* ===== Tests d'examens : IELTS · TOEIC · TOEFL · GMAT (entraînement original, 8 questions chacun) ===== */
+(function(){
+  const R=(s,l)=>s.trim().split('\n').map(r=>{const a=r.split('|');return Q(a[0],a[1],a.slice(2,5),a[5],l);});
+  const add=(id,title,desc,lv,s)=>TESTS.push({id,title,desc,qs:R(s,lv),time:'≈ 6 min',lv});
+  add('ielts','IELTS — entraînement','Grammaire, vocabulaire académique, graphiques et speaking.','B2',`
+The number of students ___ risen sharply since 2020.|has|have|are|were|« The number of » + singulier : has risen.
+Cars are convenient; ___, they cause pollution.|However|Therefore|Moreover|Because|« However » marque l'opposition.
+Which phrase describes a graph that stays level?|remain stable|plummet|soar|fluctuate wildly|« Remain stable » = rester stable.
+'Mitigate' is closest to…|reduce the effect of|increase|ignore|celebrate|Mitigate = atténuer.
+Which is the best thesis for an opinion essay?|Governments should invest in public transport because it reduces traffic.|Transport is a topic.|I will talk about cars.|Cars are good.|Une bonne thèse donne une opinion et une raison.
+Choose the correct sentence.|The graph illustrates how energy use changed.|The graph illustrate how energy use changed.|The graph illustrates how did energy use change.|The graph illustrates how energy use changing.|Sujet singulier + illustrates ; ordre normal après « how ».
+A ___ increase in prices worried consumers.|significant|significantly|signify|significance|Un adjectif est nécessaire devant « increase ».
+In Speaking Part 2, the best way to extend your answer is to…|give a reason and an example|answer in one word|stop early|repeat the question|Développer avec raison + exemple améliore la fluidité.`);
+  add('toeic','TOEIC — entraînement','Anglais professionnel : e-mails, réunions, bureau.','B1',`
+Please ___ the attached invoice before Friday.|review|reviewing|reviewed|reviews|Impératif : base verbale.
+The meeting has been ___ until next Tuesday.|postponed|postpone|postponing|postpones|Passif présent perfect : participe passé.
+'Could you send me the sales figures?' — Best reply:|Certainly, I'll email them this afternoon.|Yes, it was last week.|No, I don't like figures.|They are very tall.|C'est la seule réponse logique à une demande.
+___ the heavy rain, the conference went ahead.|Despite|Although|Because|However|« Despite » + groupe nominal.
+A résumé (CV) is used to…|apply for a job|book a flight|pay a bill|order food|Résumé = CV.
+Best subject line for an e-mail about a late delivery:|Update: Shipment delayed to 12 May|Hello|Urgent!!!|Nothing new|Un objet clair et précis est professionnel.
+Mr Kone is responsible ___ managing the budget.|for|of|to|at|« Responsible for ».
+'Deadline' means…|the final time to finish a task|a type of meeting|a salary|a contract|Deadline = date limite.`);
+  add('toefl','TOEFL — entraînement','Anglais académique : lecture, vocabulaire, grammaire.','B2',`
+'Ubiquitous' means…|present everywhere|very rare|dangerous|ancient|Ubiquitous = omniprésent.
+Which sentence is correct?|Hardly had the lecture begun when the projector failed.|Hardly the lecture had begun when the projector failed.|Hardly had begun the lecture when the projector failed.|Hardly the lecture begun when the projector failed.|Inversion sujet-auxiliaire après « Hardly ».
+Paraphrase: 'The study's findings were inconclusive.'|The study did not give clear results.|The study was cancelled.|The study proved everything.|The study was very long.|Inconclusive = non concluant.
+Which transition shows contrast?|In contrast|For instance|As a result|In addition|« In contrast » = en revanche.
+By the time the professor arrived, the students ___ the experiment.|had finished|have finished|finish|were finish|Plus-que-parfait pour une action antérieure.
+The main idea of a passage is usually found in…|the introduction and topic sentences|the page number|the font|the last word only|Repérez l'idée dans l'introduction et les phrases d'ouverture.
+Climate change has had a profound ___ on agriculture.|impact|impacting|impacted|impacts|« A profound impact » : nom singulier.
+'Hypothesis' means…|a proposed explanation to be tested|a final proof|a lab tool|a survey result|Hypothesis = hypothèse.`);
+  add('gmat','GMAT — entraînement','Sentence correction, raisonnement critique et quantitatif.','C1',`
+Each of the managers ___ responsible for a different region.|is|are|were|have been|« Each » est singulier.
+Sales rose after an ad campaign, so the campaign caused it. What weakens this most?|Sales rose equally in regions with no campaign.|The ad was colourful.|Sales rose where the campaign ran.|The campaign was costly.|Une explication alternative affaiblit le lien de cause.
+If 3x + 5 = 20, what is x?|5|15|25/3|3|3x = 15, donc x = 5.
+What is 20% of 150?|30|20|15|35|150 × 0,2 = 30.
+Which is the most concise and clear?|The company decided to expand.|The company made a decision for the purpose of expanding.|The company had a decision to expand it.|Expanding was decided by the company's decision.|La concision évite les redondances.
+A train travels 180 km in 3 hours. How far in 5 hours at the same speed?|300 km|240 km|270 km|360 km|60 km/h × 5 = 300 km.
+'Everyone who took the training improved, so training works.' The argument assumes…|those trained were not already likely to improve|training is cheap|everyone attended|improvement is impossible|Il suppose l'absence d'autre cause d'amélioration.
+A number divisible by 6 must also be divisible by…|3|4|9|12|6 = 2 × 3, donc divisible par 3.`);
+})();
+
+
+/* ===== 30 quiz de vocabulaire niveau IELTS (15) & TOEFL (15) ===== */
+(function(){
+  const D={
+  ielts:`Environnement|pollution=contamination of air or water;renewable=able to be replaced naturally;emissions=gases released into the air;conservation=protection of nature;sustainable=able to continue without harm;drought=long period without rain
+Éducation|curriculum=subjects taught in a school;tuition=fees paid for teaching;literacy=ability to read and write;vocational=related to a specific job skill;compulsory=required by law;dropout=student who leaves before finishing
+Technologie|innovation=a new idea or method;obsolete=no longer used;automation=use of machines instead of people;breakthrough=an important discovery;digital=using electronic data;cyberattack=attempt to damage computer systems
+Santé|obesity=condition of being very overweight;epidemic=disease spreading quickly in an area;nutrition=food needed for growth and health;sedentary=involving little physical activity;vaccine=medicine that prevents disease;chronic=lasting a long time
+Travail|workforce=all people employed in a company;salary=fixed regular pay;unemployment=lack of paid work;promotion=move to a higher position;flexible=able to change easily;redundancy=loss of a job not due to the worker's fault
+Société|inequality=unfair difference between groups;poverty=state of lacking money;migration=movement of people to another place;community=group living in the same area;stereotype=fixed idea about a group;welfare=support given to people in need
+Transport|congestion=heavy traffic;commuter=person who travels daily to work;infrastructure=basic systems like roads;pedestrian=person walking;fare=price of a journey;subsidy=government money that reduces costs
+Criminalité|offender=person who commits a crime;sentence=punishment given by a court;deterrent=something that discourages action;fraud=deception for illegal gain;rehabilitation=helping an offender return to normal life;witness=person who sees a crime
+Médias|broadcast=to send out on TV or radio;headline=title of a news story;bias=unfair favouring of one side;censorship=control of what can be published;viral=spreading rapidly online;circulation=number of copies sold
+Voyage|itinerary=planned route of a trip;destination=place you are travelling to;excursion=short trip for pleasure;accommodation=place to stay;souvenir=object bought to remember a place;sightseeing=visiting famous places
+Économie|inflation=general rise in prices;recession=period of economic decline;export=goods sold to other countries;revenue=income;deficit=amount by which spending exceeds income;consumer=person who buys goods
+Culture|heritage=traditions passed down;custom=traditional way of behaving;ritual=fixed ceremonial act;diversity=variety of different people;ancestor=family member from long ago;folklore=traditional stories of a people
+Science|hypothesis=proposed explanation to test;experiment=test to discover facts;data=facts and figures collected;evidence=proof supporting a claim;theory=system of ideas explaining something;laboratory=room for scientific work
+Famille|sibling=brother or sister;upbringing=the way a child is raised;household=people living together;generation=people born around the same time;guardian=person legally caring for a child;elderly=old, of people
+Vie urbaine|suburb=residential area outside a city centre;skyscraper=very tall building;slum=overcrowded poor housing area;urbanisation=growth of towns;landmark=notable building or place;municipality=local city government`,
+  toefl:`Biologie|organism=living thing;species=group of similar living things;habitat=natural home of an animal;adaptation=change to suit conditions;predator=animal that hunts others;mutation=change in genes
+Astronomie|galaxy=huge system of stars;orbit=curved path around a planet or star;comet=icy body with a tail;telescope=instrument for seeing distant objects;constellation=pattern of stars;eclipse=blocking of light from the sun or moon
+Géologie|erosion=gradual wearing away of land;fossil=remains of ancient life in rock;volcano=mountain that erupts lava;sediment=material that settles at the bottom;earthquake=sudden shaking of the ground;mineral=natural solid substance in rock
+Histoire|empire=group of states under one ruler;dynasty=series of rulers from one family;revolution=sudden political change;colony=territory ruled by another country;treaty=formal agreement between nations;artefact=object made by people in the past
+Psychologie|cognition=mental process of knowing;behaviour=the way a person acts;stimulus=something causing a reaction;motivation=reason for acting;perception=way of seeing or understanding;anxiety=feeling of worry
+Économie|scarcity=shortage of resources;demand=desire to buy goods;supply=amount available for sale;monopoly=control by a single seller;commodity=raw material that is traded;incentive=reward that encourages action
+Art|sculpture=three-dimensional artwork;canvas=surface for painting;portrait=picture of a person;abstract=not representing real objects;exhibit=to display publicly;masterpiece=work of great skill
+Littérature|narrator=person telling a story;metaphor=figure of speech comparing unlike things;plot=sequence of events in a story;theme=central idea of a work;protagonist=main character;satire=using humour to criticise
+Anthropologie|ethnic=relating to a shared culture;nomadic=moving from place to place;indigenous=native to a region;kinship=family relationships;settlement=place where people establish a home;primitive=very early in development
+Chimie|molecule=smallest unit of a compound;reaction=process of substances changing;catalyst=substance that speeds a reaction;solution=liquid with a dissolved substance;compound=substance of combined elements;acid=sour substance that can corrode
+Physique|velocity=speed in a given direction;gravity=force pulling objects together;friction=force resisting movement;magnetic=having the power to attract iron;radiation=energy sent out as waves;momentum=quantity of motion
+Sociologie|hierarchy=system of ranking;norm=accepted standard of behaviour;demographic=relating to population statistics;stratification=division into social layers;assimilation=becoming part of a larger culture;institution=established organisation or custom
+Linguistique|dialect=regional form of a language;syntax=arrangement of words;vocabulary=words a person knows;phonetics=study of speech sounds;bilingual=speaking two languages;fluent=able to speak smoothly
+Architecture|facade=front of a building;foundation=base supporting a structure;blueprint=detailed design plan;renovation=restoring a building;column=upright supporting pillar;arch=curved structure over an opening
+Business|entrepreneur=person who starts a business;merger=joining of two companies;shareholder=owner of company shares;startup=newly established company;negotiate=to discuss to reach agreement;profit=money gained after costs`};
+  Object.entries(D).forEach(([ex,txt])=>{
+    const th=txt.split('\n').map(l=>{const [n,w]=l.split('|');return {n,w:w.split(';').map(x=>x.split('='))};});
+    const pool=th.flatMap(t=>t.w.map(x=>x[1]));
+    th.forEach((t,i)=>TESTS.push({id:ex+'-v'+(i+1),title:ex.toUpperCase()+' · '+t.n,desc:'Vocabulaire de niveau '+ex.toUpperCase()+' : 6 mots à définir en contexte académique.',time:'≈ 3 min',lv:ex==='ielts'?'B2':'C1',
+      qs:t.w.map(([w,d])=>Q("In an academic text, '"+w+"' most nearly means…",d,shuffle(pool.filter(p=>p!==d)).slice(0,3),'« '+w+' » = '+d+'.',ex==='ielts'?'B2':'C1'))}));
+  });
+})();
+
+
 render(false);
 </script>
 <script>
