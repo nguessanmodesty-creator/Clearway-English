@@ -2021,6 +2021,93 @@ Business|entrepreneur=person who starts a business;merger=joining of two compani
 })();
 
 
+/* ===== Expressions du quotidien : +200 expressions dans chaque sous-rubrique (9 × 200) ===== */
+(function(){
+  const pat=`Where is {x}?~Où est {x} ?;Do you have {x}?~Avez-vous {x} ?;I'm looking for {x}.~Je cherche {x}.;Could you show me {x}?~Pouvez-vous me montrer {x} ?;How much is {x}?~Combien coûte {x} ?;I'd like {x}, please.~Je voudrais {x}, s'il vous plaît.;Can I have {x}?~Puis-je avoir {x} ?;Is there {x} here?~Y a-t-il {x} ici ?;I have to find {x}.~Je dois trouver {x}.;Please give me {x}.~Donnez-moi {x}, s'il vous plaît.;Could you bring {x}?~Pouvez-vous apporter {x} ?;Where can I find {x}?~Où puis-je trouver {x} ?;I'll take {x}.~Je prends {x}.;I can't find {x}.~Je ne trouve pas {x}.`;
+  const soc=`Do you like {x}?~Aimez-vous {x} ?;I love {x}.~J'adore {x}.;I enjoy {x}.~J'apprécie {x}.;I'd like to talk about {x}.~Je voudrais aborder {x}.;Let's talk about {x}.~Abordons {x}.;What's your opinion on {x}?~Quel est votre avis sur {x} ?;Tell me everything about {x}.~Dites-moi tout sur {x}.;I've never tried {x}.~Je n'ai jamais essayé {x}.;I'm looking forward to {x}.~J'attends {x} avec impatience.;I'd like to share {x} with you.~Je voudrais partager {x} avec vous.;Do you have any news about {x}?~Avez-vous des nouvelles sur {x} ?;Could you tell me more about {x}?~Pouvez-vous m'en dire plus sur {x} ?;I don't like {x}.~Je n'aime pas {x}.;I prefer {x}.~Je préfère {x}.`;
+  const I={
+  social:`football|le football;music|la musique;cooking|la cuisine;travelling|les voyages;movies|les films;technology|la technologie;reading|la lecture;dancing|la danse;photography|la photographie;gardening|le jardinage;swimming|la natation;running|la course à pied;fishing|la pêche;painting|la peinture;volunteering|le bénévolat`,
+  cafe:`a table by the window|une table près de la fenêtre;the menu|la carte;a glass of water|un verre d'eau;the dish of the day|le plat du jour;a coffee with milk|un café au lait;a fresh juice|un jus frais;the bill|l'addition;a fork|une fourchette;a napkin|une serviette;the salt|le sel;a plate of rice|une assiette de riz;the dessert menu|la carte des desserts;a cold drink|une boisson fraîche;a bowl of soup|un bol de soupe;the bread|le pain`,
+  work:`the report|le rapport;the contract|le contrat;the schedule|le planning;the invoice|la facture;a meeting room|une salle de réunion;the manager|le directeur;the printer|l'imprimante;the password|le mot de passe;the presentation|la présentation;a pen|un stylo;the budget|le budget;the agenda|l'ordre du jour;the client's file|le dossier du client;a laptop charger|un chargeur d'ordinateur;the office key|la clé du bureau`,
+  travel:`a ticket|un billet;the passport|le passeport;a taxi|un taxi;the bus stop|l'arrêt de bus;a suitcase|une valise;a window seat|une place côté fenêtre;the boarding pass|la carte d'embarquement;the airport shuttle|la navette de l'aéroport;a map of the city|un plan de la ville;the hotel|l'hôtel;a single room|une chambre simple;the exit|la sortie;a luggage trolley|un chariot à bagages;the train timetable|l'horaire des trains;the information desk|le bureau d'information`,
+  urgent:`a doctor|un médecin;an ambulance|une ambulance;the pharmacy|la pharmacie;some medicine|des médicaments;a first-aid kit|une trousse de secours;the hospital|l'hôpital;the police|la police;a fire extinguisher|un extincteur;a bottle of water|une bouteille d'eau;a phone|un téléphone;a nurse|une infirmière;some painkillers|des antidouleurs;the emergency exit|la sortie de secours;a blanket|une couverture;an interpreter|un interprète`,
+  shopx:`this shirt|cette chemise;a bigger size|une taille plus grande;a cheaper model|un modèle moins cher;the fitting room|la cabine d'essayage;a shopping bag|un sac de courses;the receipt|le reçu;a discount|une réduction;the shop manager|le responsable du magasin;the cash desk|la caisse;a gift box|une boîte cadeau;a refund|un remboursement;this pair of shoes|cette paire de chaussures;a black belt|une ceinture noire;the price list|la liste des prix;a warranty card|une carte de garantie`,
+  homex:`the key|la clé;the remote control|la télécommande;the plumber|le plombier;the electricity bill|la facture d'électricité;a broom|un balai;the washing machine|la machine à laver;a spare bulb|une ampoule de rechange;the Wi-Fi password|le mot de passe du Wi-Fi;a towel|une serviette;the fuse box|la boîte à fusibles;the gas bottle|la bouteille de gaz;an extension lead|une rallonge;a bucket|un seau;the landlord|le propriétaire;a mattress|un matelas`,
+  shop2:`this phone|ce téléphone;a loyalty card|une carte de fidélité;the sale section|le rayon des soldes;a bigger bag|un sac plus grand;the exchange policy|la politique d'échange;a size medium|une taille M;the delivery service|le service de livraison;a school uniform|un uniforme scolaire;a gold necklace|un collier en or;a winter coat|un manteau d'hiver;the cheapest option|l'option la moins chère;a pair of sandals|une paire de sandales;the new collection|la nouvelle collection;a leather wallet|un portefeuille en cuir;a carrier bag|un sachet`,
+  home2:`the front door|la porte d'entrée;the kitchen tap|le robinet de la cuisine;the air conditioner|le climatiseur;the water heater|le chauffe-eau;the broken window|la fenêtre cassée;a screwdriver|un tournevis;the garden hose|le tuyau d'arrosage;a new lock|une nouvelle serrure;the ladder|l'échelle;the generator|le groupe électrogène;a paintbrush|un pinceau;the spare room|la chambre d'amis;the roof|le toit;a fan|un ventilateur;the rubbish bin|la poubelle`};
+  const sp=s=>s.split(';').map(x=>x.split(/[~|]/));
+  Object.entries(I).forEach(([k,v])=>{
+    const ps=sp(k==='social'?soc:pat),its=sp(v);
+    const gen=ps.flatMap(p=>its.map(x=>[p[0].replace('{x}',x[0]),p[1].replace('{x}',x[1])])).slice(0,200);
+    PHRASES[k].items.push(...gen);
+  });
+})();
+
+
+/* ===== Onglet « Mon Prof » : conversation vocale avec Claude, Gemini ou Copilot ===== */
+(function(){
+  CONFIG.mentorApi=CONFIG.mentorApi||""; // URL du Worker (voir mentor-worker.js). Vide = non connecté.
+  CONFIG.free.mentorN=3;
+  const AG={
+    claude:{n:'Claude',by:'Anthropic',em:'🟠',pitch:1,rate:.95,vi:0,link:'https://claude.ai/new',d:'Prof patient, claire et bienveillante.'},
+    gemini:{n:'Gemini',by:'Google',em:'🔷',pitch:1.12,rate:1,vi:1,link:'https://gemini.google.com/app',d:'Prof dynamique, riche en exemples.'},
+    copilot:{n:'Copilot',by:'Microsoft',em:'🟦',pitch:.92,rate:.97,vi:2,link:'https://copilot.microsoft.com/',d:'Coach pratique, orienté travail et vie pro.'}};
+  const TOP=["Conversation libre","Se présenter","Travail & carrière","Entretien d'embauche","Voyage","Restaurant","Shopping","Technologie & IA","Santé","Sport","Actualités","Culture & musique","Vie courante","Préparer l'IELTS","Préparer le TOEFL","Préparer le TOEIC"];
+  const LV=["A1","A2","B1","B2","C1"];
+  NAV.splice(NAV.findIndex(n=>n.id==='speaking')+1,0,{id:'mentor',label:'Mon Prof',ic:'chat'});
+  S.mentor={agent:'claude',topic:TOP[0],lv:'B1',fix:true,voice:true,msgs:[],sent:0,busy:false,listening:false};
+  const sys=()=>{const M=S.mentor,a=AG[M.agent];return `You are ${a.n}, a warm, natural English teacher having a spoken conversation with a French-speaking learner (level ${M.lv}) in Abidjan. Topic: ${M.topic}. Speak like a real person: 1 to 3 short sentences, simple vocabulary for the level, react to what they say, then ask ONE follow-up question. Never use lists or markdown. ${M.fix?'If the learner made a mistake, after your reply add a new line starting with "Correction:" giving the corrected sentence and a very short explanation in French. If there is no mistake, add nothing.':''} Begin the first turn by greeting the learner and opening the topic.`;};
+  const bubble=(role,t,fix)=>{const b=document.createElement('div');b.className='row';b.style.cssText='flex-wrap:nowrap;justify-content:'+(role==='user'?'flex-end':'flex-start');
+    b.innerHTML=`<div style="background:${role==='user'?'var(--amber-tint)':'var(--ultra-tint)'};padding:10px 14px;border-radius:14px;max-width:85%;white-space:pre-wrap">${esc(t)}${fix?`<div class="small" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--ok)">✏️ ${esc(fix)}</div>`:''}</div>${role==='user'?'':spk(t,.95)}`;
+    const c=$('#mchat');if(c){c.appendChild(b);c.scrollTop=c.scrollHeight;}return b;};
+  const say=t=>{if(!S.mentor.voice||!('speechSynthesis' in window))return;stopSpeak();const a=AG[S.mentor.agent],u=new SpeechSynthesisUtterance(t),v=voices.length?voices[a.vi%voices.length]:null;u.lang='en-US';if(v)u.voice=v;u.pitch=a.pitch;u.rate=a.rate;speechSynthesis.speak(u);};
+  async function send(text){
+    const M=S.mentor;text=(text||'').trim();if(M.busy)return;
+    if(text){if(!S.premium&&M.sent>=CONFIG.free.mentorN)return paywall('Conversations illimitées avec Mon Prof');M.sent++;M.msgs.push({role:'user',content:text});bubble('user',text);}
+    else if(M.msgs.length)return;
+    if(!CONFIG.mentorApi){bubble('assistant',"Mon Prof n'est pas encore connecté à un serveur. L'administrateur doit déployer mentor-worker.js et renseigner CONFIG.mentorApi. En attendant, vous pouvez ouvrir "+AG[M.agent].n+" directement avec le bouton ci-dessous.");return;}
+    M.busy=true;const w=bubble('assistant','…');
+    try{
+      const r=await fetch(CONFIG.mentorApi,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agent:M.agent,system:sys(),messages:M.msgs.length?M.msgs.slice(-12):[{role:'user',content:'Hello!'}]})});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const d=await r.json(),full=String(d.reply||'').trim(),i=full.search(/\n\s*Correction:/),en=(i<0?full:full.slice(0,i)).trim(),fix=i<0?'':full.slice(i).replace(/^\s*Correction:\s*/i,'').trim();
+      M.msgs.push({role:'assistant',content:en});w.remove();bubble('assistant',en,fix);say(en);addXP(2);
+    }catch(e){w.remove();bubble('assistant',"Connexion impossible pour le moment ("+e.message+"). Réessayez dans un instant.");}
+    M.busy=false;
+  }
+  V.mentor=()=>{
+    const M=S.mentor,a=AG[M.agent],rec=('webkitSpeechRecognition' in window)||('SpeechRecognition' in window);
+    $('#view').innerHTML=head("Mon Prof","Parlez à voix haute avec un prof IA : il vous répond à l'oral, vous corrige et s'adapte à votre niveau, sur le thème de votre choix.")+
+    `<div class="tabs">${Object.entries(AG).map(([k,x])=>`<button class="chip ${k===M.agent?'on':''}" data-act="magent" data-k="${k}">${x.em} ${x.n}</button>`).join('')}</div>
+    <div class="card" style="max-width:760px">
+      <div class="row" style="justify-content:space-between"><div><b>${a.em} ${a.n}</b> <span class="small mut">· ${a.by} — ${a.d}</span></div><button class="btn ghost sm" data-act="mreset">Nouvelle conversation</button></div>
+      <div class="row" style="margin:12px 0"><label class="small">Thème <select id="mtopic" data-act="mtopic">${TOP.map(t=>`<option ${t===M.topic?'selected':''}>${t}</option>`).join('')}</select></label>
+        <label class="small">Niveau <select id="mlv" data-act="mlv">${LV.map(l=>`<option ${l===M.lv?'selected':''}>${l}</option>`).join('')}</select></label>
+        <label class="small"><input type="checkbox" id="mfix" ${M.fix?'checked':''}> Corrections</label>
+        <label class="small"><input type="checkbox" id="mvoice" ${M.voice?'checked':''}> Voix du prof</label></div>
+      <div id="mchat" style="display:grid;gap:10px;align-content:start;height:min(52vh,420px);overflow:auto;padding:12px;background:var(--mist);border-radius:12px"></div>
+      <div class="row" style="margin-top:12px;flex-wrap:nowrap">${rec?`<button class="mic-btn ${M.listening?'rec':''}" id="mmic" data-act="mmic" aria-label="Parler">${ico('speak')}</button>`:''}<input type="text" id="minput" placeholder="${rec?'Parlez avec le micro ou écrivez ici…':'Écrivez en anglais ici…'}" autocomplete="off" style="flex:1"><button class="btn" data-act="msend">Envoyer</button></div>
+      <p class="small mut" style="margin:10px 0 0">${rec?'':'Micro non pris en charge ici (utilisez Chrome ou Edge). '}Appuyez sur le micro, parlez en anglais, puis attendez la réponse du prof.${S.premium?'':` Gratuit : ${CONFIG.free.mentorN} messages.`}</p>
+      <p class="small" style="margin:8px 0 0"><a href="${a.link}" target="_blank" rel="noopener">Ouvrir ${a.n} dans une nouvelle fenêtre ↗</a></p>
+    </div>`;
+    M.msgs.forEach((m,i)=>bubble(m.role,m.content));
+    if(!M.msgs.length)send('');
+  };
+  Object.assign(A,{
+    magent:t=>{S.mentor.agent=t.dataset.k;S.mentor.msgs=[];render();},
+    mreset:()=>{S.mentor.msgs=[];S.mentor.busy=false;render();},
+    msend:()=>{const i=$('#minput');const v=i.value;i.value='';send(v);},
+    mmic:()=>{const M=S.mentor,R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R||M.busy)return;stopSpeak();
+      const rc=new R();rc.lang='en-US';rc.interimResults=false;M.listening=true;$('#mmic').classList.add('rec');
+      rc.onresult=e=>send(e.results[0][0].transcript);rc.onerror=()=>{};rc.onend=()=>{M.listening=false;const b=$('#mmic');if(b)b.classList.remove('rec');};rc.start();}
+  });
+  document.addEventListener('change',e=>{const M=S.mentor;if(e.target.id==='mtopic'){M.topic=e.target.value;M.msgs=[];render();}
+    else if(e.target.id==='mlv'){M.lv=e.target.value;M.msgs=[];render();}
+    else if(e.target.id==='mfix')M.fix=e.target.checked;else if(e.target.id==='mvoice'){M.voice=e.target.checked;if(!M.voice)stopSpeak();}});
+  document.addEventListener('keydown',e=>{if(e.target.id==='minput'&&e.key==='Enter'){e.preventDefault();A.msend();}});
+})();
+
+
 render(false);
 </script>
 <script>
