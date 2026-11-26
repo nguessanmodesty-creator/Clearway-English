@@ -2076,22 +2076,20 @@ Business|entrepreneur=person who starts a business;merger=joining of two compani
     M.busy=false;
   }
   V.mentor=()=>{
-    const M=S.mentor,a=AG[M.agent],rec=('webkitSpeechRecognition' in window)||('SpeechRecognition' in window);
-    $('#view').innerHTML=head("Mon Prof","Parlez à voix haute avec un prof IA : il vous répond à l'oral, vous corrige et s'adapte à votre niveau, sur le thème de votre choix.")+
-    `<div class="tabs">${Object.entries(AG).map(([k,x])=>`<button class="chip ${k===M.agent?'on':''}" data-act="magent" data-k="${k}">${x.em} ${x.n}</button>`).join('')}</div>
-    <div class="card" style="max-width:760px">
-      <div class="row" style="justify-content:space-between"><div><b>${a.em} ${a.n}</b> <span class="small mut">· ${a.by} — ${a.d}</span></div><button class="btn ghost sm" data-act="mreset">Nouvelle conversation</button></div>
-      <div class="row" style="margin:12px 0"><label class="small">Thème <select id="mtopic" data-act="mtopic">${TOP.map(t=>`<option ${t===M.topic?'selected':''}>${t}</option>`).join('')}</select></label>
-        <label class="small">Niveau <select id="mlv" data-act="mlv">${LV.map(l=>`<option ${l===M.lv?'selected':''}>${l}</option>`).join('')}</select></label>
-        <label class="small"><input type="checkbox" id="mfix" ${M.fix?'checked':''}> Corrections</label>
-        <label class="small"><input type="checkbox" id="mvoice" ${M.voice?'checked':''}> Voix du prof</label></div>
-      <div id="mchat" style="display:grid;gap:10px;align-content:start;height:min(52vh,420px);overflow:auto;padding:12px;background:var(--mist);border-radius:12px"></div>
-      <div class="row" style="margin-top:12px;flex-wrap:nowrap">${rec?`<button class="mic-btn ${M.listening?'rec':''}" id="mmic" data-act="mmic" aria-label="Parler">${ico('speak')}</button>`:''}<input type="text" id="minput" placeholder="${rec?'Parlez avec le micro ou écrivez ici…':'Écrivez en anglais ici…'}" autocomplete="off" style="flex:1"><button class="btn" data-act="msend">Envoyer</button></div>
-      <p class="small mut" style="margin:10px 0 0">${rec?'':'Micro non pris en charge ici (utilisez Chrome ou Edge). '}Appuyez sur le micro, parlez en anglais, puis attendez la réponse du prof.${S.premium?'':` Gratuit : ${CONFIG.free.mentorN} messages.`}</p>
-      <p class="small" style="margin:8px 0 0"><a href="${a.link}" target="_blank" rel="noopener">Ouvrir ${a.n} dans une nouvelle fenêtre ↗</a></p>
+    const waNumber=CONFIG.momoRaw;
+    const waText=encodeURIComponent("Bonjour Clearway English ! Je souhaite contacter Mon Prof pour obtenir de l'aide et pratiquer mon anglais. Merci de me répondre.");
+    $('#view').innerHTML=head("Mon Prof","Besoin d'un accompagnement en anglais ? Contactez directement votre professeur sur WhatsApp.")+
+    `<div class="card" style="max-width:760px;text-align:center;padding:clamp(22px,5vw,42px)">
+      <div style="font-size:58px;line-height:1.2;margin-bottom:14px">👨‍🏫</div>
+      <h2 style="margin-bottom:8px">Votre professeur Clearway est sur WhatsApp</h2>
+      <p class="mut" style="max-width:54ch;margin:0 auto 20px">Cliquez sur le bouton ci-dessous pour ouvrir une conversation WhatsApp avec le même numéro que celui utilisé pour les paiements Clearway.</p>
+      <div class="num-box" style="max-width:310px;margin:0 auto 20px">
+        <span>${esc(CONFIG.momoNumber)}</span>
+        <button class="btn sm ghost" data-act="copynum">Copier</button>
+      </div>
+      <a class="btn ok" style="display:inline-flex;text-decoration:none;padding:13px 22px;font-size:16px" href="https://wa.me/${waNumber}?text=${waText}" target="_blank" rel="noopener noreferrer">💬 Contacter Mon Prof sur WhatsApp</a>
+      <p class="small mut" style="margin:18px 0 0">WhatsApp s'ouvrira dans une nouvelle fenêtre ou dans l'application installée sur votre appareil.</p>
     </div>`;
-    M.msgs.forEach((m,i)=>bubble(m.role,m.content));
-    if(!M.msgs.length)send('');
   };
   Object.assign(A,{
     magent:t=>{S.mentor.agent=t.dataset.k;S.mentor.msgs=[];render();},
