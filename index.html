@@ -214,6 +214,9 @@ select{width:auto}
 .hm button.done{background:var(--ultra);color:#fff}.hm button.curr{background:var(--amber);color:var(--ink);font-weight:700}
 .badge{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
 .badge.off{opacity:.45;filter:grayscale(1)}.badge span{font-size:26px}
+@media print{body *{visibility:hidden}#cert,#cert *{visibility:visible}#cert{position:absolute;left:0;top:0;width:100%;max-width:none;border-width:10px}}
+#cert{border:8px double var(--ultra);padding:40px 28px;background:#fff;text-align:center;max-width:760px;border-radius:6px}
+#cert p{margin:6px 0}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
   .side{display:none}
@@ -254,7 +257,9 @@ const CONFIG={
   momoNumber:"+225 07 57 33 37 36",
   momoRaw:"2250757333736",
   days:30,
+  api:"", // URL du Worker Cloudflare (voir backend/README-deploiement.txt). Vide = mode local sans verrou.
   codeHashes:[
+    "8480952193178740","1906464943947959","1396365428890905","5349281302114420","1659019856392042","3796705973180742","3503551795438905","8336682736974295","8140098180094411","5340123846722083","8356574504590800","2620489355524876","3872751694916201","8872635875775362","2742474660634456","878878411966126","6691839788967360","5954774871653180","1965537250511238","594398794761170","2112303927162908","7151700428458256","3486046863955420","2544529756050484","534280773029445","6331821964005396","2160523855961924","8149848215364463","6326280123980898","7607888568796054","4913200335205209","7871176441076487","7460846543394833","8217645624124746","236683325838679","3423617621366143","4078821914791622","1859748714751735","5733064909497421","3745685122293373","6365162505844153","3733854396034808","1569377802068960","6537848448060754","1300087141373809","2600879860248211","4798158459532750","8458631292781375","1909772326693026","7568087029873037",
     "2800228999690325","6563418240282511","4821302899677356","266277272692446","8481280028910141","2234457778793074","8561452607645327","2131648118054068","2163163100515304","6007882809866564","5416775543484992","8429467756683307","4256052017239672","1639837467702257","4325270997501654","7564750041661330","2446624864083736","4163575560752893","7197310270555258","2344395195639695","3841409600194703","2412356013874147","5212405534181019","8071848298235281","536347776072933","6207044515676159","7451620242844840","7887469816868325","8123064637558405","8513760963121942",
     "4647857955071901","2849165932243017","5831609964143850","3592680832948715",
     "5610020132596924","6288583205126055","1421744294304284","5334793579297343",
@@ -262,7 +267,7 @@ const CONFIG={
     "2562670709487639","5102975672716091","6489962364024002","8053960695412945"
   ],
   free:{
-    daysMax:5, phrase:['social'],dlg:['d1','d2'], // Les 5 premiers jours du parcours 90 jours sont gratuits
+    daysMax:5, _t:0, phrase:['social'],dlg:['d1','d2'], // Les 5 premiers jours du parcours 90 jours sont gratuits
     vocab:['travel','daily'],
     reading:['r1'],
     listen:['l1'],
@@ -285,6 +290,7 @@ const store={
 };
 const cyrb53=(str,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);};
 const normCode=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+CONFIG.free.test.push('auto-travel-A','auto-daily-B');
 const STORE_EXP='clw_premium_exp_v3',STORE_USED='clw_codes_used';
 const premExp=()=>{let e=+store.get(STORE_EXP)||0;if(!e&&store.get(STORE_PREM)==='1'){e=Date.now()+30*864e5;store.set(STORE_EXP,e);}return e;};
 const isLocked=(kind,id)=>!S.premium&&!CONFIG.free[kind].includes(id);
@@ -390,11 +396,13 @@ const NAV=[
   {id:'plan',label:'Parcours 12 Mois',ic:'plan'},
   {id:'quiz',label:'Quiz',ic:'tests'},
   {id:'progress',label:'Progrès',ic:'trophy'},
+  {id:'certs',label:'Certificats',ic:'tests'},
   {id:'vocab',label:'Vocabulaire',ic:'vocab'},
   {id:'phrases',label:'Expressions',ic:'chat'},
   {id:'reading',label:'Reading',ic:'read'},
   {id:'listening',label:'Listening',ic:'listen'},
   {id:'dialogues',label:'Dialogues',ic:'chat'},
+  {id:'words',label:'Prononciation',ic:'speak'},
   {id:'speaking',label:'Speaking',ic:'speak'},
   {id:'writing',label:'Writing',ic:'write'},
   {id:'tests',label:'Tests',ic:'tests'},
@@ -953,6 +961,143 @@ const TESTS=[
  {id:'preps',title:"Prépositions",desc:"Time, place et prépositions dépendantes.",qs:PREPS,time:"≈ 5 min",lv:"A2"}
 ];
 
+/* ===== Dialogues (≈150) : modèles à variantes + problèmes mondiaux ===== */
+(function(){
+  const D=(id,cat,lv,title,L,qs)=>LISTENS.push({id,cat,lv,title,type:'Dialogue',lines:L.map((t,i)=>({v:i%2,t})),qs});
+  const fr=n=>n.toLocaleString('en-US'),art=w=>(/^[aeiou]/i.test(w)?'an ':'a ')+w,r5=n=>Math.round(n/500)*500;
+  const goods="phone:90000,laptop:350000,tablet:120000,headset:15000,charger:5000,backpack:12000,watch:25000,camera:150000,keyboard:10000,speaker:30000,printer:80000,fan:18000,TV:200000,fridge:250000,blender:20000,iron:8000,kettle:7000,mattress:60000,bicycle:45000,umbrella:3000,notebook:2000,calculator:4000,power bank:9000,router:22000,mouse:3500".split(',').map(s=>s.split(':'));
+  const oth=(i,k)=>art(goods[(i+k)%25][0]);
+  goods.forEach(([g,p],i)=>{p=+p;const d=r5(p*.85);
+    D('g-shop-'+i,'Shopping','A2','Buying '+art(g),["Excuse me, how much is this "+g+"?","It costs "+fr(p)+" francs.","That is a bit expensive. Can you give me a discount?","Of course. I can offer it for "+fr(d)+" francs.","Perfect. I'll take it and pay by mobile money."],
+     [Q('What does the customer want to buy?',art(g),[oth(i,3),oth(i,7)],'He asks how much this '+g+' costs.','A2'),Q('What is the final price?',fr(d)+' francs',[fr(p)+' francs',fr(r5(d*.7))+' francs'],'The seller offers a discount.','A2')]);
+    D('g-deliv-'+i,'Shopping','B1','A late delivery: '+g,["Hello, I ordered "+art(g)+" last week and it has not arrived.","I'm sorry about that. Can I have your order number?","Yes, it is CL"+(1000+i*37)+".","Thank you. I can see it. It will be delivered tomorrow before noon.","Great. Please call me when the driver is close."],
+     [Q('What is the problem?','The order has not arrived',['The item is broken','The price is wrong'],'The customer says the order has not arrived.','B1'),Q('When will it be delivered?','Tomorrow before noon',['Today at night','Next week'],'The agent gives the new delivery time.','B1')]);
+    D('g-refund-'+i,'Shopping','B1','A refund: '+g,["Hello, I bought this "+g+" yesterday but it does not work.","I'm sorry. Do you have the receipt?","Yes, here it is.","We can exchange it or give you a refund.","I would like a refund, please."],
+     [Q('What does the customer want?','A refund',['A discount','A gift'],'He asks for a refund.','B1'),Q('What does the customer show?','The receipt',['A passport','A photo'],'The agent asks for the receipt.','B1')]);});
+  const cl="T-shirt,shirt,dress,skirt,jacket,coat,suit,scarf,cap,hoodie,sweater,tie".split(','),co=["blue","black","white","red","green","yellow"],sz=["small","medium","large"];
+  for(let i=0;i<24;i++){const it=cl[i%12],c=co[(i*7+(i>11?1:0))%6],s=sz[i%3];
+    D('g-clth-'+i,'Shopping','A1','Clothes: '+c+' '+it,["Hello! I'm looking for a "+s+" "+it+".","Of course. What colour would you like?","Do you have it in "+c+"?","Yes, we do. Would you like to try it on?","Yes, please. Where is the fitting room?"],
+     [Q('What colour does the customer want?',c,co.filter(x=>x!==c).slice(0,2),'He asks for '+c+'.','A1'),Q('What size does the customer want?',s,sz.filter(x=>x!==s),'The size is '+s+'.','A1')]);}
+  "tomatoes,onions,mangoes,bananas,yams,peppers,oranges,potatoes,carrots,lemons,avocados,cucumbers,eggplants,pineapples,peanuts,beans".split(',').forEach((x,i)=>{const p=500+i*250;
+    D('g-mkt-'+i,'Shopping','A2','At the market: '+x,["Good morning! How much are the "+x+"?","They are "+fr(p)+" francs per kilo.","That is too much. Last week they were cheaper.","All right, for you, "+fr(p-250)+" francs per kilo.","Fine. Give me two kilos, please."],
+     [Q('What is the final price per kilo?',fr(p-250)+' francs',[fr(p)+' francs',fr(p+250)+' francs'],'The seller lowers the price.','A2'),Q('How many kilos does the customer buy?','Two kilos',['One kilo','Five kilos'],'She asks for two kilos.','A2')]);});
+  const pl="the pharmacy,the bank,the post office,the bus station,the market,the hospital,the airport,the school,the stadium,the supermarket,the police station,the museum".split(','),dr=["turn left at the traffic light","turn right after the bank","take the second street on the left","cross the bridge and turn right"];
+  pl.forEach((x,i)=>{const m=3+i%4*2;
+    D('g-dir-'+i,'Vie quotidienne','A1','Directions: '+x,["Excuse me, how do I get to "+x+"?","Go straight, then "+dr[i%4]+".","Is it far from here?","No, it is about "+m+" minutes on foot.","Thank you very much!"],
+     [Q('Where does the man want to go?',x,pl.filter(y=>y!==x).slice(i%5,i%5+2),'He asks the way to '+x+'.','A1'),Q('How far is it?',m+' minutes on foot',[(m+10)+' minutes on foot','Two hours by bus'],'The woman says it is about '+m+' minutes.','A1')]);});
+  ["a headache","a fever","a cough","a sore throat","a stomach ache","back pain","a toothache","a skin rash"].forEach((s,i,a)=>
+    D('g-med-'+i,'Santé','A2','At the pharmacy: '+s,["Good afternoon. How can I help you?","I have "+s+" since yesterday.","I see. You should rest and drink a lot of water.","Do I need a prescription for the medicine?","Not for this one. Take it twice a day after meals."],
+     [Q('What is the problem?','The customer has '+s,['The customer has '+a[(i+1)%8],'The customer has '+a[(i+3)%8]],'He describes his symptom.','A2'),Q('How often must he take the medicine?','Twice a day',['Once a week','Every hour'],'Twice a day after meals.','A2')]));
+  "grilled chicken,jollof rice,fried fish,spaghetti,a burger,a salad,vegetable soup,a pizza,a sandwich,an omelette,kedjenou,attiéké with fish".split(',').forEach((x,i,a)=>
+    D('g-rest-'+i,'Vie quotidienne','A1','Ordering: '+x,["Good evening. Are you ready to order?","Yes, I'll have "+x+", please.","Would you like something to drink?","Just a bottle of water, please.","Certainly. Your order will be ready in fifteen minutes."],
+     [Q('What does the customer order?',x,[a[(i+2)%12],a[(i+5)%12]],'He orders '+x+'.','A1'),Q('What does the customer drink?','Water',['Juice','Coffee'],'A bottle of water.','A1')]));
+  ["my phone will not charge","the Wi-Fi is not working","my screen is broken","my account is locked","the app keeps crashing","I forgot my password","my battery drains very fast","my laptop is very slow"].forEach((x,i,a)=>
+    D('g-tech-'+i,'Technologie','B1','Tech support: '+x,["Hello, technical support. How can I help you?","Hi, "+x+".","I'm sorry about that. Have you restarted the device?","Yes, but nothing changed.","Let me check your account and send you a solution by email."],
+     [Q("What is the customer's problem?",x,[a[(i+1)%8],a[(i+4)%8]],'The customer explains the problem.','B1'),Q('What does the agent ask?','If the device was restarted',['If the customer has paid','If it is raining'],'The agent asks about a restart.','B1')]));
+  [["Climate change","B1",["Have you noticed how hot it has become?","Yes. Scientists say global warming is making summers longer.","What can ordinary people do?","We can use less energy, plant trees and avoid waste."],"What is making summers longer?","Global warming",["Cheaper energy","More trees"]],
+   ["Clean water","B1",["Many villages still do not have clean drinking water.","That causes diseases, especially among children.","Some charities build wells and install solar pumps.","Governments should invest more in water systems."],"What do some charities build?","Wells and solar pumps",["Schools","Roads"]],
+   ["Rising prices","B1",["Food prices have gone up again this month.","Yes, fuel and transport are more expensive, so everything costs more.","How do you cope with it?","I buy in bulk and compare prices before shopping."],"How does the speaker cope?","He buys in bulk and compares prices",["He stops eating","He earns more"]],
+   ["Plastic pollution","B2",["Plastic bags are blocking the drains in our city.","They also end up in the lagoon and harm the fish.","Some countries have banned single-use plastic.","We need better recycling and fewer disposable products."],"Where do plastic bags end up?","In the lagoon",["In the forest","In the desert"]],
+   ["AI and jobs","B2",["Do you think artificial intelligence will take our jobs?","Some jobs will disappear, but new ones will appear.","So workers must keep learning new skills.","Exactly. Training is the best protection."],"What is the best protection for workers?","Training",["Higher taxes","Fewer machines"]],
+   ["Youth unemployment","B2",["Many young graduates cannot find a job.","Companies want experience, but nobody gives them a chance.","Internships and apprenticeships could solve part of the problem.","Yes, and young people can also start small businesses."],"What could solve part of the problem?","Internships and apprenticeships",["Longer holidays","Bigger classes"]],
+   ["Solar energy","B1",["Our neighbourhood has power cuts every week.","Solar panels could be a good solution.","They are expensive, but the sun is free.","Prices are falling, so more families can afford them."],"Why are solar panels attractive?","The sun is free",["They are cheap to build","They work at night"]],
+   ["Vaccination","B2",["Vaccines have saved millions of lives.","But some people still hesitate because of false information.","Doctors must explain the facts patiently.","Community leaders can help build trust."],"Who can help build trust?","Community leaders",["Tourists","Banks"]]
+  ].forEach((g,i)=>D('g-world-'+i,'Problèmes mondiaux',g[1],g[0],g[2],[Q(g[3],g[4],g[5],'Réécoutez le dialogue.',g[1])]));
+  CONFIG.free.listen.push('g-shop-0','g-clth-0','g-dir-0');
+})();
+
+/* ===== Mots à prononcer (≈200) ===== */
+const WORDS={
+ animals:{label:"Animaux",w:"lion|lion,elephant|éléphant,monkey|singe,giraffe|girafe,zebra|zèbre,hippo|hippopotame,crocodile|crocodile,snake|serpent,parrot|perroquet,eagle|aigle,owl|hibou,bat|chauve-souris,dolphin|dauphin,whale|baleine,shark|requin,turtle|tortue,frog|grenouille,butterfly|papillon,bee|abeille,ant|fourmi,spider|araignée,mosquito|moustique,cow|vache,goat|chèvre,sheep|mouton,pig|cochon,horse|cheval,donkey|âne,chicken|poule,duck|canard,rabbit|lapin,dog|chien,cat|chat,mouse|souris,rat|rat,fish|poisson,crab|crabe,camel|chameau,leopard|léopard,gorilla|gorille,chimpanzee|chimpanzé"},
+ home:{label:"Maison & objets",w:"table|table,chair|chaise,bed|lit,pillow|oreiller,blanket|couverture,mirror|miroir,window|fenêtre,door|porte,key|clé,lamp|lampe,curtain|rideau,carpet|tapis,shelf|étagère,drawer|tiroir,sofa|canapé,fridge|réfrigérateur,stove|cuisinière,oven|four,pot|casserole,pan|poêle,plate|assiette,bowl|bol,cup|tasse,glass|verre,spoon|cuillère,fork|fourchette,knife|couteau,bucket|seau,broom|balai,soap|savon,towel|serviette,toothbrush|brosse à dents,shower|douche,toilet|toilettes,bin|poubelle,candle|bougie,clock|horloge,fan|ventilateur,wardrobe|armoire,roof|toit,floor|sol"},
+ tech:{label:"Technologie & IA",w:"computer|ordinateur,laptop|ordinateur portable,keyboard|clavier,screen|écran,printer|imprimante,router|routeur,cable|câble,charger|chargeur,battery|batterie,password|mot de passe,username|nom d'utilisateur,download|télécharger,upload|téléverser,website|site web,browser|navigateur,software|logiciel,hardware|matériel,update|mise à jour,application|application,cloud|nuage informatique,database|base de données,network|réseau,server|serveur,security|sécurité,hacker|pirate informatique,algorithm|algorithme,artificial intelligence|intelligence artificielle,machine learning|apprentissage automatique,chatbot|agent conversationnel,prompt|instruction donnée à l'IA,data|données,robot|robot,drone|drone,smartphone|téléphone intelligent,tablet|tablette,headphones|écouteurs,camera|appareil photo,video call|appel vidéo,email|courriel,attachment|pièce jointe,social media|réseaux sociaux,streaming|diffusion en continu,virtual reality|réalité virtuelle,cybersecurity|cybersécurité"},
+ shop:{label:"Shopping",w:"price|prix,discount|réduction,receipt|reçu,cashier|caissier,customer|client,cart|panier,size|taille,fitting room|cabine d'essayage,refund|remboursement,exchange|échange,warranty|garantie,delivery|livraison,cheap|bon marché,expensive|cher,sale|soldes,bargain|bonne affaire,change|monnaie,cash|espèces,credit card|carte bancaire,mobile money|argent mobile,coupon|bon de réduction,brand|marque,quality|qualité,fabric|tissu,cotton|coton,leather|cuir,shirt|chemise,trousers|pantalon,dress|robe,shoes|chaussures,bag|sac,wallet|portefeuille,belt|ceinture,glasses|lunettes,jewellery|bijoux,perfume|parfum,online order|commande en ligne,shipping fee|frais de livraison,out of stock|en rupture de stock,try on|essayer,pay|payer"},
+ daily:{label:"Vie courante",w:"wake up|se réveiller,breakfast|petit-déjeuner,lunch|déjeuner,dinner|dîner,commute|trajet domicile-travail,traffic|circulation,take a shower|prendre une douche,brush your teeth|se brosser les dents,get dressed|s'habiller,go to work|aller au travail,meeting|réunion,deadline|date limite,errands|démarches,laundry|linge,housework|ménage,cook|cuisiner,wash the dishes|faire la vaisselle,neighbour|voisin,appointment|rendez-vous,schedule|emploi du temps,weekend|week-end,holiday|vacances,birthday|anniversaire,invitation|invitation,gift|cadeau,weather|météo,umbrella|parapluie,bus stop|arrêt de bus,ticket|billet,queue|file d'attente,bill|facture,rent|loyer,salary|salaire,savings|économies,budget|budget,health|santé,exercise|faire du sport,sleep|dormir,tired|fatigué,hungry|affamé"}
+};
+Object.values(WORDS).forEach(c=>c.items=c.w.split(',').map(s=>s.split('|')));
+CONFIG.free.words=['animals'];
+
+/* ===== Lot 2 : 80 dialogues (travail, sport, vie courante, shopping) ===== */
+(function(){
+  const D=(id,cat,lv,title,L,qs)=>LISTENS.push({id,cat,lv,title,type:'Dialogue',lines:L.map((t,i)=>({v:i%2,t})),qs});
+  const W=(v,a)=>[...new Set(v.filter(x=>x!==a))].slice(0,2),fr=n=>n.toLocaleString('en-US');
+  const mk=(pre,cat,lv,title,arr,fn)=>arr.forEach((x,i)=>{const r=fn(x,i);D(pre+i,cat,lv,title(x),r[0],r.slice(1).map(q=>Q(q[0],q[1],W(q[2],q[1]),q[3]||'Réécoutez le dialogue.',lv)));});
+  const days=["Monday","Tuesday","Wednesday","Thursday","Friday"],times=["9 a.m.","10 a.m.","11 a.m.","1 p.m.","2 p.m.","3 p.m.","4 p.m."];
+  mk('w-meet-','Travail','A2',x=>'Moving a meeting to '+x[0],[["Monday","9 a.m."],["Tuesday","10 a.m."],["Wednesday","11 a.m."],["Thursday","2 p.m."],["Friday","3 p.m."],["Monday","4 p.m."],["Tuesday","1 p.m."],["Thursday","9 a.m."]],x=>[["Could we move our meeting to "+x[0]+"?","Sure. What time suits you?","How about "+x[1]+"?","That works for me. I will update the calendar.","Thanks, see you then."],["Which day is the new meeting?",x[0],days],["What time is the meeting?",x[1],times]]);
+  const jobs=["teacher","nurse","accountant","engineer","driver","designer","cook","electrician"],yrs=[2,3,4,5,6,7,8,10];
+  mk('w-int-','Travail','B1',x=>'Interview: '+x,jobs,(x,i)=>[["Why do you want this job as a "+x+"?","I enjoy helping people, and I have "+yrs[i]+" years of experience.","What is your biggest strength?","I am organised and I learn fast.","Thank you. We will contact you next week."],["How many years of experience does he have?",yrs[i]+' years',yrs.map(y=>y+' years')],["When will the company contact him?","Next week",["Tomorrow","Next year"]]]);
+  const tk=["report","presentation","budget","proposal","invoice","survey","contract","schedule"];
+  mk('w-dead-','Travail','B1',x=>'The '+x+' deadline',tk,(x,i)=>[["Is the "+x+" ready?","Not yet. I need "+(i%3+2)+" more days.","The deadline is "+days[i%5]+".","I understand. I will send it before then.","Thank you. Please keep me informed."],["What is not ready?","The "+x,tk.map(t=>'The '+t)],["How many more days are needed?",(i%3+2)+' days',['1 day','7 days']]]);
+  const lv=["a family event","a medical appointment","a short holiday","a training course","a wedding","moving house","a university exam","a funeral"];
+  mk('w-leave-','Travail','B1',x=>'Asking for leave: '+x,lv,(x,i)=>[["Can I speak to you for a moment?","Of course. What is it?","I would like to take "+(i%4+2)+" days off for "+x+".","That should be fine. Please send me an email.","Thank you. I will do it today."],["Why does he want time off?",x,lv],["How many days does he ask for?",(i%4+2)+' days',['10 days','1 day']]]);
+  const sp=["football","basketball","tennis","swimming","running","cycling","volleyball","boxing"];
+  mk('s-club-','Sport','A2',x=>'Joining a '+x+' club',sp,(x,i)=>[["I would like to join the "+x+" club.","Sure. Have you played before?","Yes, for "+(i%4+1)+" years.","Training is on "+days[i%5]+" at 6 p.m.","Great, I will be there."],["Which sport does he want to do?",x,sp],["When is the training?",days[i%5]+' at 6 p.m.',[days[(i+2)%5]+' at 6 p.m.',days[(i+3)%5]+' at 8 a.m.']]]);
+  mk('s-match-','Sport','B1',x=>'Talking about last night\'s '+x+' match',sp,(x,i)=>[["Did you watch the "+x+" match last night?","Yes! It was amazing.","Who won?","Our local team won by "+(i%5+2)+" points.","What a result! I missed it."],["Who won?","The local team",["The visitors","Nobody"]],["What was the margin?",(i%5+2)+' points',['10 points','1 point']]]);
+  const pc=["the airport","the train station","the hospital","the university","the market","the stadium","the beach","the city centre"];
+  mk('d-taxi-','Vie quotidienne','A2',x=>'In a taxi to '+x,pc,(x,i)=>[["Where to, please?","To "+x+", please.","It will cost "+fr(2000+i*500)+" francs.","Fine. Can you stop at the corner?","Of course."],["Where is the passenger going?",x,pc],["How much is the ride?",fr(2000+i*500)+' francs',[fr(1000+i*500)+' francs',fr(5000+i*500)+' francs']]]);
+  const bo=["a ladder","a drill","an iron","a bicycle pump","a big pot","a hammer","a torch","a suitcase"];
+  mk('d-neigh-','Vie quotidienne','A2',x=>'Borrowing '+x,bo,(x,i)=>[["Hello! Could I borrow "+x+"?","Of course. What for?","I need it for the weekend.","No problem. Please bring it back on Monday.","Thank you so much!"],["What does he want to borrow?",x,bo],["When must he bring it back?","On Monday",["On Friday","Next month"]]]);
+  const sm=["rice","cooking oil","milk","bread","sugar","soap","eggs","juice"];
+  mk('sh-super-','Shopping','A2',x=>'Supermarket: where is the '+x+'?',sm,(x,i)=>[["Excuse me, where can I find the "+x+"?","It is in aisle "+(i+2)+".","Thank you. Is there a promotion today?","Yes, two for the price of one.","Great, I will take two."],["Which product does the customer look for?",x,sm],["Which aisle is it in?",'Aisle '+(i+2),['Aisle '+(i+10),'Aisle 1']]]);
+  const pl=["shoes","trousers","sandals","jeans","boots","gloves","shorts","socks"];
+  mk('sh-size-','Shopping','A2',x=>'Finding the right size: '+x,pl,(x,i)=>[["These "+x+" are too small. Do you have a bigger size?","Let me check. What size are you?","I am size "+(38+i)+".","Yes, here you are. Would you like to try them on?","They fit perfectly. I will take them."],["What is the problem?","They are too small",["They are too expensive","They are dirty"]],["What size is the customer?",'Size '+(38+i),['Size 30','Size 50']]]);
+})();
+
+/* ===== 8 textes de lecture ===== */
+[["A2","A Busy Morning",2,"Every morning I wake up at six. I take a shower and eat bread with eggs. Then I walk to the bus stop. The bus is often late, so I read a book while I wait. I arrive at work at eight and start my first meeting.",{"bus stop":"arrêt de bus","late":"en retard"},[["What does he eat?","Bread with eggs",["Rice and fish","Only coffee","Fruit"]],["What does he do while waiting?","He reads a book",["He calls a friend","He sleeps","He walks home"]]]],
+ ["A2","Shopping at the Market",2,"On Saturday, Mariam goes to the market with her mother. They buy tomatoes, fish and some bananas. The seller says the fish costs 3,000 francs, but Mariam asks for a lower price. In the end, the seller accepts 2,500 francs. They go home happy.",{"seller":"vendeur","lower":"plus bas"},[["What price does the seller ask first?","3,000 francs",["2,500 francs","1,000 francs","5,000 francs"]],["How do they feel at the end?","Happy",["Angry","Tired","Sad"]]]],
+ ["B1","Working from Home",3,"More people now work from home. Many say it saves time because they do not sit in heavy traffic. However, some feel lonely and find it hard to stop working in the evening. Companies are trying to find a balance by offering two or three office days each week.",{"lonely":"seul(e)","traffic":"circulation"},[["What is one advantage?","It saves travel time",["Higher salaries","Fewer meetings","More holidays"]],["What do companies offer?","Two or three office days a week",["Free meals","Longer lunch breaks","No deadlines"]]]],
+ ["B1","Why People Play Sport",3,"Sport is good for the body, but it also helps the mind. Players learn to work in a team and to accept defeat. In many African cities, local football tournaments bring neighbourhoods together and give young people a positive goal.",{"defeat":"défaite","tournaments":"tournois"},[["What do players learn?","To work in a team",["To avoid risks","To be rich","To work alone"]],["What do the tournaments do?","Bring neighbourhoods together",["Cause traffic only","Replace schools","Increase prices"]]]],
+ ["B2","The Rise of Online Shopping",3,"Online shopping has changed the way we buy. With mobile money, customers in Abidjan can order a phone and pay without cash. Yet delivery delays and fake products remain serious concerns. Experts advise buying only from verified sellers and reading customer reviews before paying.",{"reviews":"avis clients","verified":"vérifiés"},[["What allows payment without cash?","Mobile money",["Bank cheques","Gift coupons","Bargaining"]],["What do experts advise?","Buying from verified sellers",["Never reading reviews","Always paying in advance","Avoiding all websites"]]]],
+ ["B2","Artificial Intelligence at Work",4,"Artificial intelligence can now write reports, translate documents and answer customers within seconds. Employers appreciate the speed, but employees worry about their jobs. Most analysts believe that AI will change tasks rather than replace entire professions, so learning to use these tools is becoming essential.",{"replace":"remplacer","essential":"indispensable"},[["What do most analysts believe?","AI will change tasks rather than replace professions",["AI will replace every job","AI will disappear","AI is too slow"]],["What is becoming essential?","Learning to use AI tools",["Avoiding computers","Working at night","Moving abroad"]]]],
+ ["C1","The Hidden Cost of Fast Fashion",4,"Fast fashion offers trendy clothes at remarkably low prices, but the environmental toll is considerable. Textile production consumes enormous quantities of water, and discarded garments often end up in landfills abroad. Campaigners urge consumers to buy fewer, better-made items and to repair rather than discard.",{"landfills":"décharges","garments":"vêtements"},[["What is the main criticism?","Its heavy environmental impact",["Its high prices","Its lack of colours","Its slow delivery"]],["What do campaigners recommend?","Buying fewer, better-made items",["Buying more cheaply","Burning old clothes","Ignoring trends"]]]],
+ ["C1","Remote Work and the Future of Cities",4,"As remote work becomes widespread, urban planners are reconsidering the role of city centres. Office districts may lose their appeal, whereas neighbourhoods with cafés, parks and reliable internet could thrive. Whether this shift reduces inequality or deepens it will depend on who can afford such flexibility.",{"widespread":"répandu","thrive":"prospérer"},[["What may thrive?","Neighbourhoods with cafés, parks and internet",["Office districts only","Factories","Airports"]],["What will the effect on inequality depend on?","Who can afford flexibility",["The weather","Fuel prices","School holidays"]]]]
+].forEach((r,i)=>READINGS.push({id:'r-n-'+(i+1),lv:r[0],title:r[1],min:r[2],text:r[3],gloss:r[4],qs:r[5].map(q=>Q(q[0],q[1],q[2],'Relisez le texte.'))}));
+
+/* ===== 216 phrases à prononcer (modèles × listes) ===== */
+(function(){
+  const P=(lab,pats,items)=>({label:lab,items:pats.flatMap(p=>items.map(x=>[p[0].replace('{x}',x[0]),p[1].replace('{x}',x[1])]))});
+  const pq=["Could I have {x}, please?","Pourrais-je avoir {x}, s'il vous plaît ?"],pw=["I'd like {x}, please.","Je voudrais {x}, s'il vous plaît."],pd=["Do you have {x}?","Avez-vous {x} ?"];
+  WORDS.restaurant=P("Restaurant",[pq,pw,pd],[["the menu","la carte"],["the bill","l'addition"],["a table for two","une table pour deux"],["a glass of water","un verre d'eau"],["some bread","du pain"],["the dish of the day","le plat du jour"],["a vegetarian option","une option végétarienne"],["a high chair","une chaise haute"],["another fork","une autre fourchette"],["a doggy bag","un sac pour emporter"],["extra sauce","de la sauce en plus"],["a quiet table","une table au calme"]]);
+  WORDS.drinks=P("Boissons",[pq,pw,pd],[["a cup of tea","une tasse de thé"],["an orange juice","un jus d'orange"],["a cold beer","une bière fraîche"],["a glass of red wine","un verre de vin rouge"],["a bottle of water","une bouteille d'eau"],["a black coffee","un café noir"],["a coconut water","une eau de coco"],["a ginger juice","un jus de gingembre"],["a hot chocolate","un chocolat chaud"],["a soda with ice","un soda avec des glaçons"],["a fruit smoothie","un smoothie aux fruits"],["a mineral water","une eau minérale"]]);
+  WORDS.sports=P("Sports",[["I love {x}.","J'adore {x}."],["Do you like {x}?","Aimez-vous {x} ?"],["Let's watch {x} tonight.","Regardons {x} ce soir."]],[["football","le football"],["basketball","le basket"],["tennis","le tennis"],["swimming","la natation"],["running","la course à pied"],["cycling","le cyclisme"],["volleyball","le volley"],["boxing","la boxe"],["athletics","l'athlétisme"],["rugby","le rugby"],["handball","le handball"],["yoga","le yoga"]]);
+  WORDS.present=P("Présentation",[["Today I am going to talk about {x}.","Aujourd'hui, je vais parler de {x}."],["Let's move on to {x}.","Passons à {x}."],["Are there any questions about {x}?","Y a-t-il des questions sur {x} ?"]],[["our sales results","nos résultats de ventes"],["the new project","le nouveau projet"],["our marketing plan","notre plan marketing"],["the budget","le budget"],["customer feedback","les retours clients"],["our goals for next year","nos objectifs pour l'an prochain"],["the main challenges","les principaux défis"],["the timeline","le calendrier"],["our team","notre équipe"],["the new software","le nouveau logiciel"],["the survey results","les résultats de l'enquête"],["our strategy","notre stratégie"]]);
+  WORDS.workp=P("Travail",[["I will send you {x} by Friday.","Je vous envoie {x} d'ici vendredi."],["Could you check {x}, please?","Pouvez-vous vérifier {x} ?"],["Where is {x}?","Où est {x} ?"]],[["the report","le rapport"],["the invoice","la facture"],["the contract","le contrat"],["the schedule","le planning"],["the proposal","la proposition"],["the budget","le budget"],["the presentation","la présentation"],["the figures","les chiffres"],["the agenda","l'ordre du jour"],["the email","l'e-mail"],["the offer","l'offre"],["the document","le document"]]);
+  WORDS.clothesp=P("Vêtements",[["I am looking for {x}.","Je cherche {x}."],["Can I try on {x}?","Puis-je essayer {x} ?"],["How much is {x}?","Combien coûte {x} ?"]],[["a blue shirt","une chemise bleue"],["a black dress","une robe noire"],["a leather belt","une ceinture en cuir"],["a cotton scarf","une écharpe en coton"],["a red skirt","une jupe rouge"],["a grey suit","un costume gris"],["a green T-shirt","un t-shirt vert"],["a wool sweater","un pull en laine"],["a winter coat","un manteau d'hiver"],["a baseball cap","une casquette"],["a warm jacket","une veste chaude"],["a silk tie","une cravate en soie"]]);
+  CONFIG.free.words.push('restaurant');
+})();
+
+
+
+/* ===== 60 expressions : shopping & maison ===== */
+(function(){
+  const X=(l,s)=>({label:l,items:s.split(';').map(p=>p.split('|'))});
+  PHRASES.shopx=X("Shopping+","I'm just looking, thanks.|Je regarde seulement, merci.;Do you have this in a larger size?|L'avez-vous dans une taille plus grande ?;Where is the fitting room?|Où sont les cabines d'essayage ?;It doesn't fit me.|Ça ne me va pas.;Do you take credit cards?|Acceptez-vous les cartes bancaires ?;Can I pay by mobile money?|Puis-je payer par mobile money ?;Is there a discount for cash?|Y a-t-il une réduction en espèces ?;That's out of my budget.|C'est hors de mon budget.;Could you give me a better price?|Pouvez-vous me faire un meilleur prix ?;I'll think about it.|Je vais y réfléchir.;Can I get a receipt, please?|Puis-je avoir un reçu ?;Is this item on sale?|Cet article est-il en solde ?;How long is the warranty?|Quelle est la durée de la garantie ?;Can I return it if I change my mind?|Puis-je le rendre si je change d'avis ?;I'd like to exchange this.|Je voudrais l'échanger.;Do you deliver to my address?|Livrez-vous à mon adresse ?;How much is the delivery fee?|Combien coûtent les frais de livraison ?;When will my order arrive?|Quand ma commande arrivera-t-elle ?;It's out of stock.|C'est en rupture de stock.;Do you have anything cheaper?|Avez-vous moins cher ?;What is it made of?|En quoi est-ce fait ?;Can I see the one in the window?|Puis-je voir celui de la vitrine ?;I'm looking for a gift.|Je cherche un cadeau.;Could you wrap it, please?|Pouvez-vous l'emballer ?;Keep the change.|Gardez la monnaie.;I have a coupon.|J'ai un bon de réduction.;Is tax included?|La taxe est-elle comprise ?;The screen is damaged.|L'écran est endommagé.;I'd like to speak to the manager.|Je voudrais parler au responsable.;I'll take both.|Je prends les deux.;This is exactly what I wanted.|C'est exactement ce que je voulais.");
+  PHRASES.homex=X("Maison+","Make yourself at home.|Faites comme chez vous.;Could you open the window?|Pouvez-vous ouvrir la fenêtre ?;The power is out.|Il y a une coupure de courant.;There's a leak in the kitchen.|Il y a une fuite dans la cuisine.;I need to fix the tap.|Je dois réparer le robinet.;Turn off the light, please.|Éteignez la lumière, s'il vous plaît.;Where do you keep the plates?|Où rangez-vous les assiettes ?;Dinner is ready.|Le dîner est prêt.;I'm cleaning the house today.|Je nettoie la maison aujourd'hui.;Please take your shoes off.|Veuillez enlever vos chaussures.;The fridge is empty.|Le réfrigérateur est vide.;Can you take out the rubbish?|Peux-tu sortir les poubelles ?;I live in a small flat.|J'habite un petit appartement.;My room is on the second floor.|Ma chambre est au deuxième étage.;The rent is due on the first.|Le loyer est dû le premier du mois.;We need to buy some furniture.|Nous devons acheter des meubles.;The air conditioner is broken.|La climatisation est en panne.;Could you lower the volume?|Pouvez-vous baisser le volume ?;I'm locking the door.|Je ferme la porte à clé.;I forgot my keys.|J'ai oublié mes clés.;The neighbours are very friendly.|Les voisins sont très sympathiques.;Let's paint the living room.|Peignons le salon.;The bed is very comfortable.|Le lit est très confortable.;Could you iron my shirt?|Peux-tu repasser ma chemise ?;We have no running water.|Nous n'avons pas d'eau courante.;Please water the plants.|Arrosez les plantes, s'il vous plaît.;I'm doing the laundry.|Je fais la lessive.;The kitchen is spotless.|La cuisine est impeccable.;Can you help me move this table?|Peux-tu m'aider à déplacer cette table ?;Welcome to my home!|Bienvenue chez moi !;I'm looking for a new apartment.|Je cherche un nouvel appartement.");
+})();
+
+/* ===== Générateurs de contenu (tests auto + vidéos de recherche) ===== */
+function genTests(){
+  for(let i=TESTS.length-1;i>=0;i--)if(TESTS[i].id.startsWith('auto-'))TESTS.splice(i,1);
+  const all=Object.values(VOCAB).flatMap(t=>t.words),fr=all.map(w=>w[2]),en=all.map(w=>w[0]);
+  const pick=(a,x)=>shuffle(a.filter(y=>y!==x)).slice(0,3);
+  const kinds={
+    A:['Anglais → français',w=>Q('Que signifie « '+w[0]+' » ?',w[2],pick(fr,w[2]),w[3],'A2')],
+    B:['Français → anglais',w=>Q('Comment dit-on « '+w[2]+' » en anglais ?',w[0],pick(en,w[0]),w[3],'A2')],
+    C:['Phrases à compléter',w=>{const re=new RegExp(w[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');
+       return re.test(w[3])?Q('Complétez : '+w[3].replace(re,'_____'),w[0],pick(en,w[0]),'« '+w[3]+' » — '+w[2],'B1'):Q('Que signifie « '+w[0]+' » ?',w[2],pick(fr,w[2]),w[3],'A2');}]
+  };
+  Object.entries(VOCAB).forEach(([k,t])=>Object.entries(kinds).forEach(([c,[lab,fn]])=>
+    TESTS.push({id:'auto-'+k+'-'+c,title:t.label+' : '+lab,desc:'Quiz généré depuis le vocabulaire du thème, avec explication.',qs:t.words.map(fn),time:'≈ 4 min',lv:c==='C'?'B1':'A2'})));
+}
+function genVideos(){
+  const topics="Greetings and introductions|Numbers and time|Family vocabulary|Daily routine|Ordering food|Asking for directions|Shopping for clothes|Weather and seasons|Present simple|Past simple|Present perfect|Future tenses|Conditionals|Passive voice|Reported speech|Modal verbs|Phrasal verbs|Idioms at work|Job interview|Business email|Meetings and presentations|Negotiation|Phone calls|Travel and airports|Hotel and booking|Health and doctor|Technology vocabulary|Artificial intelligence|Social media|Online shopping|Banking and money|Environment|Education and school|Cooking and recipes|Sports and hobbies|Music and movies|Pronunciation of vowels|Word stress|Connected speech|British vs American English|Listening practice slow|Everyday small talk|Opinions and debates|Writing an essay|IELTS speaking|IELTS writing|TOEFL listening|Vocabulary B2|Collocations|Articles a/an/the|Prepositions|Question tags|Comparatives and superlatives|Relative clauses|Gerunds and infinitives|Linking words|Pronouncing -ed endings|English for customer service|English for tourism".split('|');
+  const ch=['BBC Learning English','English with Lucy','Rachel\'s English','mmmEnglish','Learn English with TED-Ed'];
+  for(let i=VIDEOS.length-1;i>=0;i--)if(VIDEOS[i].auto)VIDEOS.splice(i,1);
+  topics.forEach((t,i)=>ch.forEach(c=>VIDEOS.push({auto:1,t:t+' — '+c,lv:i<20?'A2':i<42?'B1':'B2',q:c+' '+t,d:'Recherche YouTube ciblée sur ce thème.'})));
+}
+
+
 /* ============ Données : visual aids ============ */
 const VISUAL={
  animals:{label:"Animaux",items:[["🐶","dog","chien"],["🐱","cat","chat"],["🐴","horse","cheval"],["🐮","cow","vache"],["🐰","rabbit","lapin"],["🐦","bird","oiseau"],["🐟","fish","poisson"],["🐻","bear","ours"],["🦁","lion","lion"],["🐘","elephant","éléphant"]]},
@@ -973,6 +1118,13 @@ const VISUAL={
  sports:{label:"Sports",items:[["⚽","football","football"],["🏀","basketball","basket"],["🎾","tennis","tennis"],["🏊","swimming","natation"],["🚴","cycling","cyclisme"],["🥊","boxing","boxe"],["🏃","running","course à pied"],["🏐","volleyball","volley"],["🏓","table tennis","tennis de table"],["⛳","golf","golf"]]},
  nature:{label:"Nature",items:[["🌳","tree","arbre"],["🌸","flower","fleur"],["⛰️","mountain","montagne"],["🌊","wave","vague"],["🔥","fire","feu"],["🌙","moon","lune"],["⭐","star","étoile"],["🌈","rainbow","arc-en-ciel"],["🏜️","desert","désert"],["🌋","volcano","volcan"]]}
 };
+/* ===== Images (emoji) : vêtements, métiers, technologie ===== */
+Object.assign(VISUAL,{
+ clothes:{label:"Vêtements",items:[["👕","T-shirt","t-shirt"],["👔","shirt and tie","chemise et cravate"],["👖","jeans","jean"],["👗","dress","robe"],["🩳","shorts","short"],["🧥","coat","manteau"],["🧣","scarf","écharpe"],["🧤","gloves","gants"],["🧢","cap","casquette"],["👒","hat","chapeau"],["👟","sneakers","baskets"],["👞","shoe","chaussure"],["👠","high heels","talons hauts"],["👡","sandal","sandale"],["🥾","boot","botte"],["🧦","socks","chaussettes"],["👙","swimsuit","maillot de bain"],["🕶️","sunglasses","lunettes de soleil"],["👓","glasses","lunettes"],["👜","handbag","sac à main"],["🎒","backpack","sac à dos"],["💍","ring","bague"],["⌚","watch","montre"],["👛","purse","porte-monnaie"],["🩴","flip-flops","tongs"],["👚","blouse","chemisier"]]},
+ jobs:{label:"Métiers",items:[["🧑‍⚕️","doctor","médecin"],["🧑‍🏫","teacher","enseignant"],["🧑‍🍳","cook","cuisinier"],["🧑‍🚒","firefighter","pompier"],["👮","police officer","policier"],["🧑‍✈️","pilot","pilote"],["🧑‍🌾","farmer","agriculteur"],["👷","builder","ouvrier du bâtiment"],["🧑‍💻","programmer","développeur"],["🧑‍🔧","mechanic","mécanicien"],["🧑‍🔬","scientist","scientifique"],["🧑‍🎨","artist","artiste"],["🧑‍⚖️","judge","juge"],["🧑‍🚀","astronaut","astronaute"],["🧑‍🏭","factory worker","ouvrier d'usine"],["🧑‍💼","office worker","employé de bureau"],["🧑‍🎤","singer","chanteur"],["💂","guard","garde"],["🕵️","detective","détective"],["🧑‍🍼","nanny","nourrice"]]},
+ tech:{label:"Technologie",items:[["💻","laptop","ordinateur portable"],["🖥️","desktop computer","ordinateur de bureau"],["⌨️","keyboard","clavier"],["🖱️","mouse","souris"],["🖨️","printer","imprimante"],["📱","smartphone","smartphone"],["☎️","telephone","téléphone fixe"],["📷","camera","appareil photo"],["🎧","headphones","casque audio"],["🔋","battery","batterie"],["🔌","plug","prise"],["💾","floppy disk","disquette"],["📡","satellite dish","antenne parabolique"],["🤖","robot","robot"],["🛰️","satellite","satellite"],["🎮","game controller","manette de jeu"],["📺","television","télévision"],["💡","light bulb","ampoule"],["🔦","torch","lampe torche"],["🎙️","microphone","microphone"],["📹","video camera","caméra vidéo"],["🕹️","joystick","manche à jeu"],["💿","CD","CD"],["🔍","magnifying glass","loupe"]]}
+});
+CONFIG.free.visCat.push('clothes');
 const TENSES={
  past:[["Past simple","Action terminée à un moment précis du passé.","I visited Rome in 2019."],["Past continuous","Action en cours dans le passé.","I was walking when it started to rain."],["Past perfect","Action antérieure à une autre action passée.","I had finished before she arrived."]],
  now:[["Present simple","Habitudes, vérités générales.","I visit my parents every Sunday."],["Present continuous","Action en train de se produire.","I am visiting a client right now."],["Present perfect","Lien entre passé et présent (expérience, durée).","I have visited Rome three times."]],
@@ -991,6 +1143,12 @@ const VIDEOS=[
  {t:"Préparer l'IELTS : Writing",lv:"C1",q:"IELTS writing task 2 band 8 lesson",d:"Structure et vocabulaire pour un essai argumenté."}
 ];
 
+genTests();genVideos();
+fetch('packs/packs.json').then(r=>r.json()).then(p=>{
+  (p.listens||[]).forEach(x=>LISTENS.push(x));(p.readings||[]).forEach(x=>READINGS.push(x));(p.videos||[]).forEach(x=>VIDEOS.push(x));
+  Object.assign(PHRASES,p.phrases||{});Object.assign(VOCAB,p.vocab||{});genTests();render();
+}).catch(()=>{});
+
 /* ============ État & Chargement sauvegarde ============ */
 const savedData=(()=>{try{return JSON.parse(store.get(STORE_DATA)||'null');}catch(e){return null;}})();
 const S={
@@ -1006,12 +1164,12 @@ const S={
   plan:{month:1,openDay:null},
   vocab:{theme:'travel',mode:'cards',i:0,flip:false},
   read:{open:null},
-  listen:{tab:'comp',open:null,dict:0,rate:1},
+  listen:{cat:'Tous',n:24,tab:'comp',open:null,dict:0,rate:1},
   speak:{i:0,listening:false,transcript:'',score:null},
   write:{task:'w1',texts:{},reports:{},model:{}},
   test:{open:null},
   vis:{tab:'dict',cat:'animals'},
-  vid:{id:null,msg:''},phr:{cat:'social'},dlg:{open:null,hide:false},qz:{run:null}
+  vid:{id:null,msg:''},phr:{cat:'social'},wd:{cat:'animals',i:0,msg:''},dlg:{open:null,hide:false},qz:{run:null}
 };
 
 /* ============ Rendu général ============ */
@@ -1043,9 +1201,11 @@ V.home=()=>{
    ['plan',"Parcours 12 Mois",`Votre programme quotidien structuré sur 12 mois (${S.daysDone.size}/${TOTAL} jours faits).`],
    ['vocab',"Vocabulaire",`${all.length} mots en 10 thèmes avec cartes mémoire, phonétique et quiz.`],
    ['quiz',"Quiz","Des centaines de questions : mots, phrases à trous, images, défi mixte."],
+   ['certs',"Certificats","Attestations de formation à imprimer ou enregistrer en PDF."],
    ['progress',"Progrès","Votre carte des 90 jours, badges et niveau estimé."],
    ['phrases',"Expressions","Phrases utiles par situation : café, travail, voyage, urgences."],
    ['dialogues',"Dialogues","8 conversations audio à deux voix, texte masquable."],
+   ['words',"Mots à prononcer","Entraînez-vous mot par mot : animaux, maison, technologie et IA, shopping."],
    ['speaking',"Speaking (Oral)","Entraînez votre prononciation avec reconnaissance vocale."],
    ['reading',"Reading","Textes de A2 à B2 avec glossaire cliquable et questions."],
    ['listening',"Listening","Dialogues, annonces, exposés professionnels et dictées audio."],
@@ -1252,6 +1412,37 @@ V.phrases=()=>{
   `<div class="tabs">${Object.entries(PHRASES).map(([id,p])=>`<button class="chip ${id===k?'on':''}" data-act="pcat" data-k="${id}">${p.label}${lk('phrase',id)}</button>`).join('')}</div>
   <div class="grid">${c.items.map(p=>`<div class="card row" style="justify-content:space-between;flex-wrap:nowrap"><div><b>${esc(p[0])}</b><div class="small mut">${esc(p[1])}</div></div>${spk(p[0],0.9)}</div>`).join('')}</div>`;
 };
+/* ============ Mots à prononcer ============ */
+V.words=()=>{
+  const w=S.wd,L=WORDS[w.cat].items,it=L[w.i];
+  const rec=('webkitSpeechRecognition' in window)||('SpeechRecognition' in window);
+  $('#view').innerHTML=head("Mots à prononcer","Écoutez le mot, répétez-le au micro, puis passez au suivant. "+Object.values(WORDS).reduce((a,c)=>a+c.items.length,0)+" mots en "+Object.keys(WORDS).length+" thèmes.")+
+  `<div class="tabs">${Object.entries(WORDS).map(([k,c])=>`<button class="chip ${k===w.cat?'on':''}" data-act="wcat" data-k="${k}">${c.label}${lk('words',k)}</button>`).join('')}</div>
+  <div class="card" style="max-width:560px;text-align:center;padding:30px 24px">
+    <div class="small mut">Mot ${w.i+1} sur ${L.length}</div>
+    <h2 style="font-size:clamp(22px,6vw,34px);margin:10px 0 4px">${esc(it[0])}</h2><p class="mut">${esc(it[1])}</p>
+    <div class="row" style="justify-content:center;margin:14px 0"><button class="btn ghost" data-act="say" data-say="${esc(it[0])}" data-rate="0.9">${ico('speaker')} Écouter</button><button class="btn ghost" data-act="say" data-say="${esc(it[0])}" data-rate="0.55">Lentement</button></div>
+    ${rec?`<button class="mic-btn" data-act="wrec" aria-label="Parler">${ico('speak')}</button><div class="small" style="font-weight:600">Appuyez et dites : ${esc(it[0])}</div>`:'<p class="small mut">Micro non disponible sur ce navigateur : répétez à voix haute.</p>'}
+    <div id="wres" class="small" style="margin-top:12px;min-height:22px">${w.msg}</div>
+    <div class="row" style="justify-content:center;margin-top:16px"><button class="btn ghost" data-act="wprev">← Précédent</button><button class="btn" data-act="wnext">Suivant →</button></div>
+  </div>`;
+};
+/* ============ Certificats ============ */
+V.certs=()=>{
+  const n=S.daysDone.size,nm=store.get('clw_name')||'',k=S.cert=S.cert||0;
+  const C=[[30,'Mois 1 : Fondations','A2'],[60,'Mois 2 : Fluidité','B1'],[90,'Programme complet 90 jours','B2–C1']];
+  const c=C[k],ok=n>=c[0];
+  const id=(cyrb53(nm+c[2]+c[0]).toString(36)).slice(0,8).toUpperCase();
+  const dt=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  $('#view').innerHTML=head("Certificats de formation","Validez 30, 60 puis 90 jours pour obtenir votre attestation Clearway English, à imprimer ou à enregistrer en PDF.")+
+  `<div class="tabs">${C.map((x,i)=>`<button class="chip ${i===k?'on':''}" data-act="ccert" data-k="${i}">${x[1]}${n>=x[0]?' ✓':''}</button>`).join('')}</div>
+  ${ok?`<div class="row" style="margin-bottom:14px"><input type="text" id="certname" value="${esc(nm)}" placeholder="Votre nom complet" aria-label="Nom sur le certificat" style="max-width:320px"><button class="btn" data-act="cprint">Imprimer / PDF</button></div>
+  <div id="cert"><b style="font-family:var(--serif);font-size:22px;color:var(--ultra)">Clearway English</b><p class="mut">Certificat de formation</p><p>décerné à</p>
+  <h1 id="certnm" style="font-size:38px;margin:10px 0">${esc(nm||'Votre nom')}</h1>
+  <p>pour avoir suivi avec succès<br><b style="font-size:20px">${c[1]}</b><br>soit ${c[0]} jours de formation validés · niveau visé <b>${c[2]}</b></p>
+  <p class="small mut" style="margin-top:22px">Délivré le ${dt} · N° ${id}<br>Attestation de formation Clearway English, non équivalente à un diplôme officiel.</p></div>`
+  :`<div class="card"><b>Certificat verrouillé</b><p class="mut" style="margin:6px 0 10px">Il vous reste ${c[0]-n} jour(s) à valider (${n} / ${c[0]}).</p><div class="bar"><i style="width:${Math.round(n/c[0]*100)}%"></i></div><button class="btn" style="margin-top:14px" data-act="nav" data-v="plan">Continuer le parcours</button></div>`}`;
+};
 /* ============ Progrès ============ */
 V.progress=()=>{
   const n=S.daysDone.size,w=S.known.size,cur=n+1;
@@ -1261,6 +1452,7 @@ V.progress=()=>{
   $('#view').innerHTML=head("Mes progrès","Votre avancée sur les 90 jours, vos badges et votre niveau estimé.")+
   `<div class="grid" style="margin-bottom:18px"><div class="card"><b style="font-size:28px;font-family:var(--serif)">${n}/${TOTAL}</b><div class="small mut">jours validés</div></div><div class="card"><b style="font-size:28px;font-family:var(--serif)">${w}</b><div class="small mut">mots acquis</div></div><div class="card"><b style="font-size:28px;font-family:var(--serif)">${lvl}</b><div class="small mut">niveau estimé</div></div></div>
   <div class="card" style="margin-bottom:18px"><b>Carte des 12 mois</b><div class="hm">${hm}</div></div>
+  <div class="card" style="margin-bottom:18px"><b>Contenu disponible</b><div class="small mut" style="margin-top:6px">${Object.values(VOCAB).flatMap(t=>t.words).length} mots · ${Object.values(PHRASES).reduce((a,p)=>a+p.items.length,0)} expressions · ${LISTENS.length} audios · ${READINGS.length} textes · ${VIDEOS.length} vidéos · ${TESTS.length} tests (${TESTS.reduce((a,t)=>a+t.qs.length,0)} questions)</div></div>
   <h2>Badges</h2><div class="grid">${bd.map(b=>`<div class="badge ${b[0]?'':'off'}"><span>${b[1]}</span><div><b>${b[2]}</b><div class="small mut">${b[3]}</div></div></div>`).join('')}</div>`;
 };
 
@@ -1353,6 +1545,9 @@ V.reading=()=>{
 };
 
 /* ============ Listening ============ */
+const lfilter=()=>LISTENS.filter(x=>S.listen.cat==='Tous'||(x.cat||'Classiques')===S.listen.cat).slice(0,S.listen.n);
+const lchips=()=>{const cs=['Tous',...new Set(LISTENS.map(x=>x.cat||'Classiques'))],tot=LISTENS.filter(x=>S.listen.cat==='Tous'||(x.cat||'Classiques')===S.listen.cat).length;
+  return `<div class="tabs">${cs.map(c=>`<button class="chip ${c===S.listen.cat?'on':''}" data-act="lcat" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div><p class="small mut">${Math.min(tot,S.listen.n)} sur ${tot} audios${tot>S.listen.n?' <button class="btn sm ghost" data-act="lmore">Afficher plus</button>':''}</p>`;};
 V.listening=()=>{
   const L=S.listen;
   const tabs=`<div class="tabs"><button class="chip ${L.tab==='comp'?'on':''}" data-act="ltab" data-t="comp">Compréhension orale</button><button class="chip ${L.tab==='dict'?'on':''}" data-act="ltab" data-t="dict">Dictée</button></div>`;
@@ -1368,7 +1563,7 @@ V.listening=()=>{
     return;
   }
   if(!L.open){
-    $('#view').innerHTML=intro+tabs+`<div class="grid">${LISTENS.map(x=>`<button class="card tile" data-act="lopen" data-id="${x.id}">${lvBadge(x.lv)}${prem('listen',x.id)}<h3>${x.title}</h3><span class="mut small">${x.type} · ${x.qs.length} questions</span></button>`).join('')}</div>`;
+    $('#view').innerHTML=intro+tabs+lchips()+`<div class="grid">${lfilter().map(x=>`<button class="card tile" data-act="lopen" data-id="${x.id}">${lvBadge(x.lv)}${prem('listen',x.id)}<h3>${x.title}</h3><span class="mut small">${x.type} · ${x.qs.length} questions</span></button>`).join('')}</div>`;
     return;
   }
   const x=LISTENS.find(a=>a.id===L.open);
@@ -1604,6 +1799,17 @@ const A={
    render();
  },
  /* nouveautés */
+ lcat:t=>{S.listen.cat=t.dataset.c;S.listen.n=24;render();},
+ lmore:()=>{S.listen.n+=24;render();},
+ wcat:t=>{if(isLocked('words',t.dataset.k))return paywall('Ce thème de prononciation');Object.assign(S.wd,{cat:t.dataset.k,i:0,msg:''});render();},
+ wnext:()=>{const w=S.wd;w.i=(w.i+1)%WORDS[w.cat].items.length;w.msg='';render();},
+ wprev:()=>{const w=S.wd,n=WORDS[w.cat].items.length;w.i=(w.i-1+n)%n;w.msg='';render();},
+ wrec:()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;const rc=new SR();rc.lang='en-US';rc.maxAlternatives=3;
+   rc.onresult=e=>{const t=WORDS[S.wd.cat].items[S.wd.i][0].toLowerCase(),alts=[...e.results[0]].map(a=>a.transcript.toLowerCase().replace(/[^a-z0-9\s']/g,'').trim());
+     const tw=t.replace(/[^a-z0-9\s']/g,'').split(/\s+/),ok=alts.some(a=>{const g=a.split(/\s+/);return tw.filter(x=>g.includes(x)).length/tw.length>=0.75;});S.wd.msg=ok?'<b style="color:var(--ok)">Bien prononcé !</b>':'J\'ai entendu : <b>'+esc(alts[0])+'</b>. Réessayez.';if(ok)addXP(2);render();};
+   rc.onerror=()=>toast('Micro non détecté ou refusé.');rc.start();},
+ ccert:t=>{S.cert=+t.dataset.k;render();},
+ cprint:()=>window.print(),
  qstart:t=>{const kd=t.dataset.kind,k=t.dataset.k;
    if(kd==='v'&&isLocked('vocab',k))return paywall('Ce quiz de vocabulaire');
    if(kd==='vis'&&isLocked('visCat',k))return paywall('Ce quiz visuel');
@@ -1622,7 +1828,7 @@ const A={
    if(navigator.clipboard)navigator.clipboard.writeText('0757333736').then(()=>toast('Numéro 07 57 33 37 36 copié !'));
    else toast('Numéro : 07 57 33 37 36');
  },
- pwcode:()=>{
+ pwlocal:()=>{
    const v=normCode($('#pwcode').value);
    if(v.length<6){$('#pwmsg').textContent="Saisissez votre code d'accès.";return;}
    // Vérification par empreinte ou codes maîtres
@@ -1632,6 +1838,19 @@ const A={
      used.push(hv);store.set(STORE_USED,JSON.stringify(used));
      S.premium=true;store.set(STORE_PREM,'1');store.set(STORE_EXP,Date.now()+CONFIG.days*864e5);closePaywall();toast('🎉 Félicitations ! Accès Premium activé.');render();
    }else{$('#pwmsg').textContent="Code invalide. Vérifiez votre code ou contactez le +225 07 57 33 37 36.";}
+ },
+ pwcode:async()=>{
+   if(!CONFIG.api)return A.pwlocal();
+   const v=normCode($('#pwcode').value),msg=$('#pwmsg');
+   if(v.length<6){msg.textContent="Saisissez votre code d'accès.";return;}
+   msg.style.color='var(--mut)';msg.textContent='Vérification…';
+   try{
+     let dev=store.get('clw_dev');if(!dev){dev=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());store.set('clw_dev',dev);}
+     const r=await fetch(CONFIG.api+'/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:v,device:dev})});
+     const j=await r.json();
+     if(j.ok){S.premium=true;store.set(STORE_PREM,'1');store.set(STORE_EXP,j.exp);closePaywall();toast('🎉 Félicitations ! Accès Premium activé.');render();return;}
+     msg.style.color='var(--bad)';msg.textContent=j.error||'Code invalide.';
+   }catch(e){msg.style.color='var(--bad)';msg.textContent='Connexion impossible. Vérifiez internet puis réessayez.';}
  },
  premoff:()=>{S.premium=false;store.set(STORE_PREM,'0');store.set(STORE_EXP,0);toast('Premium désactivé sur cet appareil.');render(true);}
 };
@@ -1648,12 +1867,64 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closePaywall();}
 });
 document.addEventListener('input',e=>{
+  if(e.target.id==='certname'){store.set('clw_name',e.target.value);$('#certnm').textContent=e.target.value||'Votre nom';}
   if(e.target.id==='wtext'){
     const t=WRITINGS.find(x=>x.id===S.write.task);S.write.texts[t.id]=e.target.value;
     const n=(e.target.value.trim().match(/\b[\w'’-]+\b/g)||[]).length;
     $('#wcount').textContent=`${n} / ${t.min} mots minimum`;
   }
 });
+/* ===== EXTENSION v2 : 80 dialogues · 216 phrases · 200 images · 100 expressions ===== */
+(function(){
+  const L=s=>s.split(',').map(x=>x.split('|'));
+  /* --- 80 dialogues (travail, sport, vie courante, shopping) --- */
+  const T={
+   work:[["Hi, do you have a minute? I'd like to talk about {x}.","Of course. What's the problem?","I'm afraid we need more time to finish {x}.","How much more time do you need?","Probably {n} more days.","All right. Send me the details and I'll inform the manager."],
+         ["Good morning. Could we go through {x} together?","Sure. Let's start with the main points.","The client wants some changes to {x}.","Understood. Can you list them in an email?","I'll send it before the end of the day.","Thanks. We'll discuss it at tomorrow's meeting."]],
+   sport:[["Do you like {x}?","Yes, I love it! I practise {x} {n} times a week.","Really? How long have you been doing it?","For about {m} years. Would you like to join me?","I'd love to, but I'm a beginner.","No problem. We'll start slowly and you'll improve quickly."],
+          ["Did you see the {x} on TV last night?","No, I missed it. Who won?","Our team won after a great second half.","Fantastic! I'm a big fan of {x}.","Me too. Let's watch the next one together.","Good idea. I'll bring some snacks."]],
+   life:[["Excuse me, could you tell me where {x} is?","Yes, it's about {n} minutes from here on foot.","Should I go straight on?","Go straight, then turn left at the traffic lights.","Is it open now?","I think so. It usually closes at six. Good luck!"],
+         ["Hello, I need to go to {x} today.","Then you'd better leave soon. The traffic is heavy.","Do you think a taxi is faster than the bus?","Yes, a taxi takes about {n} minutes.","How much will it cost?","Around two thousand francs. Don't forget to ask for a receipt."]],
+   shop:[["Good afternoon. I'm looking for {x}.","We have several models. What's your budget?","About {p} francs.","This one costs {p} francs. Would you like to try it?","Yes, please. It looks good. Can I pay by mobile money?","Of course. Here is your receipt. Thank you!"],
+         ["Excuse me, how much is {x}?","It's {p} francs, but there's a discount today.","Can you do a better price?","I can give you ten percent off.","That sounds fair. I'll take it.","Great. Would you like a bag?"]]};
+  const XS={
+   work:L("the report|le rapport,the invoice|la facture,the budget|le budget,the contract|le contrat,the presentation|la présentation,the schedule|le planning,the new project|le nouveau projet,the client's request|la demande du client,the training course|la formation,the survey|l'enquête,the proposal|la proposition,the delivery|la livraison,the inventory|l'inventaire,the website|le site web,the salary review|la révision salariale,the team meeting|la réunion d'équipe,the job offer|l'offre d'emploi,the deadline|la date limite,the recruitment|le recrutement,the sales figures|les chiffres de vente"),
+   sport:L("football|football,tennis|tennis,basketball|basket,swimming|natation,running|course à pied,cycling|cyclisme,volleyball|volley,boxing|boxe,golf|golf,rugby|rugby,handball|handball,judo|judo,karate|karaté,athletics|athlétisme,yoga|yoga,badminton|badminton,hockey|hockey,gymnastics|gymnastique,surfing|surf,table tennis|tennis de table"),
+   life:L("the pharmacy|la pharmacie,the bank|la banque,the post office|la poste,the bus station|la gare routière,the market|le marché,the bakery|la boulangerie,the supermarket|le supermarché,the hospital|l'hôpital,the hairdresser's|le coiffeur,the library|la bibliothèque,the airport|l'aéroport,the cinema|le cinéma,the school|l'école,the police station|le commissariat,the petrol station|la station-service,the train station|la gare,the hotel|l'hôtel,the gym|la salle de sport,the laundry|la laverie,the town hall|la mairie"),
+   shop:L("a blue shirt|une chemise bleue,a pair of trainers|une paire de baskets,a leather handbag|un sac en cuir,a smartphone|un smartphone,a wristwatch|une montre,a summer dress|une robe d'été,a warm jacket|une veste chaude,a pair of jeans|un jean,a laptop|un ordinateur portable,a pair of headphones|un casque audio,a pair of sunglasses|des lunettes de soleil,a suitcase|une valise,a bottle of perfume|un flacon de parfum,a cotton scarf|une écharpe en coton,a leather belt|une ceinture en cuir,a wallet|un portefeuille,a pair of shoes|une paire de chaussures,a baseball cap|une casquette,a school backpack|un sac à dos,a folding umbrella|un parapluie pliant")};
+  const TH={work:["Travail",['B1','B2','B1']],sport:["Sport",['A2','A2','B1']],life:["Vie courante",['A2','A2','B1']],shop:["Shopping",['A2','B1','A2']]};
+  Object.keys(T).forEach(k=>XS[k].forEach((x,i)=>{
+    const f=s=>s.replace(/\{x\}/g,x[0]).replace(/\{n\}/g,k==='life'?5+(i%4)*5:k==='work'?2+i%4:2+i%4).replace(/\{m\}/g,1+i%6).replace(/\{p\}/g,((5+i%8*5)*1000).toLocaleString('en-US'));
+    DIALOGUES.push({id:'dn'+(DIALOGUES.length+1),t:TH[k][0]+' : '+x[1],lv:TH[k][1][i%3],lines:T[k][i%2].map((t,j)=>({v:j%2,t:f(t)}))});
+  }));
+
+  /* --- 216 phrases à prononcer (6 thèmes × 4 modèles × 9 éléments) --- */
+  const P=(lab,pats,items)=>({label:lab,items:pats.flatMap(p=>items.map(x=>[p[0].replace('{x}',x[0]),p[1].replace('{x}',x[1])]))});
+  const pp=s=>s.split(';').map(x=>x.split('~')), ii=s=>s.split(';').map(x=>x.split('|'));
+  WORDS.restaurant2=P("Restaurant +",pp("Could you bring {x}, please?~Pouvez-vous apporter {x}, s'il vous plaît ?;I'd like to order {x}.~Je voudrais commander {x}.;How much is {x}?~Combien coûte {x} ?;Does the price include {x}?~Le prix comprend-il {x} ?"),ii("the wine list|la carte des vins;a starter|une entrée;a main course|un plat principal;a dessert|un dessert;a side salad|une salade en accompagnement;the soup of the day|la soupe du jour;a grilled chicken|un poulet braisé;a plate of attiéké|une assiette d'attiéké;some chilli sauce|du piment"));
+  WORDS.drinks2=P("Boissons +",pp("Can I have {x} to go?~Puis-je avoir {x} à emporter ?;How much is {x}?~Combien coûte {x} ?;I'd rather have {x}.~Je préférerais {x}.;Do you serve {x}?~Servez-vous {x} ?"),ii("a cappuccino|un cappuccino;a lemonade|une limonade;a bissap juice|un jus de bissap;a green tea|un thé vert;a milkshake|un milk-shake;an iced coffee|un café glacé;a sparkling water|une eau gazeuse;a mango juice|un jus de mangue;a herbal tea|une tisane"));
+  WORDS.sports2=P("Sports +",pp("I'm a big fan of {x}.~Je suis un grand fan de {x}.;Where can I practise {x} here?~Où puis-je pratiquer le {x} ici ?;Is there a {x} club nearby?~Y a-t-il un club de {x} près d'ici ?;I'd like to join a {x} team.~J'aimerais rejoindre une équipe de {x}."),ii("football|football;basketball|basket;volleyball|volley;handball|handball;rugby|rugby;tennis|tennis;hockey|hockey;cricket|cricket;baseball|baseball"));
+  WORDS.present2=P("Présentation +",pp("Let me start with {x}.~Permettez-moi de commencer par {x}.;I'd like to highlight {x}.~Je voudrais souligner {x}.;To sum up, let's go back to {x}.~Pour résumer, revenons à {x}.;Do you have any comments on {x}?~Avez-vous des remarques sur {x} ?"),ii("the main results|les principaux résultats;the market trends|les tendances du marché;the risks|les risques;the next steps|les prochaines étapes;our strategy|notre stratégie;the key figures|les chiffres clés;the competition|la concurrence;the conclusion|la conclusion;the benefits|les avantages"));
+  WORDS.work2=P("Travail +",pp("I'm working on {x} at the moment.~Je travaille sur {x} en ce moment.;We need to finish {x} before Monday.~Nous devons terminer {x} avant lundi.;Could you give me an update on {x}?~Pouvez-vous me faire un point sur {x} ?;Who is in charge of {x}?~Qui est responsable de {x} ?"),ii("the client file|le dossier client;the monthly report|le rapport mensuel;the new website|le nouveau site web;the recruitment|le recrutement;the training session|la session de formation;the product launch|le lancement du produit;the quarterly budget|le budget trimestriel;the customer survey|l'enquête clients;the delivery|la livraison"));
+  WORDS.clothes2=P("Vêtements +",pp("Do you have {x} in my size?~Avez-vous {x} dans ma taille ?;I'd like to exchange {x}.~Je voudrais échanger {x}.;Does {x} come in other colours?~Existe-t-il {x} en d'autres couleurs ?;What is {x} made of?~En quoi est fait {x} ?"),ii("this pair of trousers|ce pantalon;this cotton shirt|cette chemise en coton;this long dress|cette robe longue;this leather jacket|cette veste en cuir;this wool sweater|ce pull en laine;this pair of jeans|ce jean;this black skirt|cette jupe noire;this raincoat|cet imperméable;this tracksuit|ce survêtement"));
+
+  /* --- 100 expressions : shopping & maison --- */
+  PHRASES.shop2=P("Shopping ++",pp("Do you have {x} in stock?~Avez-vous {x} en stock ?;How much is {x}?~Combien coûte {x} ?;I'd like to return {x}.~Je voudrais rendre {x}.;Can I try on {x}?~Puis-je essayer {x} ?;Is there a discount on {x}?~Y a-t-il une réduction sur {x} ?"),ii("this shirt|cette chemise;this dress|cette robe;this bag|ce sac;this watch|cette montre;this phone|ce téléphone;this belt|cette ceinture;this coat|ce manteau;this skirt|cette jupe;this hat|ce chapeau;this laptop|cet ordinateur"));
+  PHRASES.home2=P("Maison ++",pp("There's a problem with {x}.~Il y a un problème avec {x}.;Could you clean {x}, please?~Pouvez-vous nettoyer {x}, s'il vous plaît ?;Where is {x}?~Où est {x} ?;I need to repair {x}.~Je dois réparer {x}.;Please don't touch {x}.~Ne touchez pas {x}, s'il vous plaît."),ii("the fridge|le réfrigérateur;the cooker|la cuisinière;the washing machine|la machine à laver;the fan|le ventilateur;the air conditioner|le climatiseur;the tap|le robinet;the shower|la douche;the front door|la porte d'entrée;the generator|le groupe électrogène;the water tank|le réservoir d'eau"));
+
+  /* --- 200 images (emoji) : vêtements, métiers, technologie, bureau --- */
+  const V=(lab,s)=>({label:lab,items:s.split(';').map(x=>x.split('|'))});
+  Object.assign(VISUAL,{
+   fashion:V("Mode & accessoires","🥼|lab coat|blouse de laboratoire;🦺|safety vest|gilet de sécurité;🩱|one-piece swimsuit|maillot une pièce;🩲|briefs|slip;🩴|flip-flops|tongs;🥿|flat shoe|ballerine;👘|kimono|kimono;🥻|sari|sari;👚|blouse|chemisier;👛|purse|porte-monnaie;👝|pouch|pochette;🎓|graduation cap|toque de diplômé;👑|crown|couronne;📿|beads|collier de perles;💄|lipstick|rouge à lèvres;💅|nail polish|vernis à ongles;🧴|lotion|crème;🪮|comb|peigne;🪭|hand fan|éventail;🧵|thread|fil;🧶|yarn|laine;🪡|needle|aiguille;🧷|safety pin|épingle de sûreté;🎽|running vest|débardeur de course;🥋|judo suit|kimono de judo;⛑️|rescue helmet|casque de secours;🪖|military helmet|casque militaire;👢|high boot|botte haute;🧳|suitcase|valise;💎|gem|pierre précieuse;🪞|mirror|miroir;🧼|soap|savon;🪥|toothbrush|brosse à dents;✂️|scissors|ciseaux;🎩|top hat|haut-de-forme;🛍️|shopping bag|sac de courses;🧺|laundry basket|panier à linge;🪝|hook|crochet;🏷️|label|étiquette;💈|barber pole|salon de coiffure"),
+   jobs2:V("Métiers +","👨‍⚕️|male doctor|médecin (homme);👩‍⚕️|female doctor|médecin (femme);👨‍🏫|male teacher|enseignant;👩‍🏫|female teacher|enseignante;🧑‍🎓|student|étudiant;👨‍🎓|male student|étudiant (garçon);👩‍🎓|female student|étudiante;👨‍🍳|male chef|chef cuisinier;👩‍🍳|female chef|cheffe cuisinière;👨‍🌾|male farmer|agriculteur;👩‍🌾|female farmer|agricultrice;👨‍🔧|male mechanic|mécanicien;👩‍🔧|female mechanic|mécanicienne;👨‍🏭|male factory worker|ouvrier;👩‍🏭|female factory worker|ouvrière;👨‍💼|businessman|homme d'affaires;👩‍💼|businesswoman|femme d'affaires;👨‍🔬|male scientist|chercheur;👩‍🔬|female scientist|chercheuse;👨‍💻|male developer|développeur;👩‍💻|female developer|développeuse;👨‍🎤|male singer|chanteur;👩‍🎤|female singer|chanteuse;👨‍🎨|male artist|artiste (homme);👩‍🎨|female artist|artiste (femme);👨‍✈️|male pilot|pilote (homme);👩‍✈️|female pilot|pilote (femme);👨‍🚀|male astronaut|astronaute (homme);👩‍🚀|female astronaut|astronaute (femme);👨‍🚒|male firefighter|pompier;👩‍🚒|female firefighter|pompière;👮‍♀️|policewoman|policière;👮‍♂️|policeman|policier;🕵️|detective|détective;💂|guard|garde;👷‍♀️|female builder|ouvrière du bâtiment;👷‍♂️|male builder|maçon;👨‍⚖️|male judge|juge (homme);👩‍⚖️|female judge|juge (femme);🤹|juggler|jongleur;🏋️|weightlifter|haltérophile;🤸|gymnast|gymnaste"),
+   tools:V("Outils des métiers","🩺|stethoscope|stéthoscope;💉|syringe|seringue;💊|pill|comprimé;🩹|plaster|pansement;⚖️|scales of justice|balance de la justice;🔧|wrench|clé à molette;🔨|hammer|marteau;🪚|saw|scie;🧰|toolbox|boîte à outils;🪛|screwdriver|tournevis;🚜|tractor|tracteur;🌾|crops|cultures;🍳|frying pan|poêle;🔬|microscope|microscope;🔭|telescope|télescope;✏️|pencil|crayon;📚|books|livres;🎤|microphone|microphone;🎬|clapperboard|clap de cinéma;🎨|palette|palette de peintre;🎻|violin|violon;🎹|piano|piano;🥁|drum|tambour;🎸|guitar|guitare;🚒|fire engine|camion de pompiers;🚓|police car|voiture de police;🚑|ambulance|ambulance;🚚|delivery truck|camion de livraison;🏗️|crane|grue;🧹|broom|balai;📊|bar chart|graphique;💼|briefcase|mallette;🗂️|folders|dossiers;🪜|ladder|échelle;🧱|brick|brique;⛏️|pickaxe|pioche;🪓|axe|hache;🧪|test tube|éprouvette;🏥|hospital|hôpital;🏫|school|école;🏭|factory|usine;🏦|bank|banque"),
+   tech2:V("Technologie +","📟|pager|bipeur;📠|fax machine|télécopieur;📞|phone receiver|combiné;📲|phone with arrow|appel entrant;💽|minidisc|minidisque;💿|CD|CD;📀|DVD|DVD;🧮|abacus|boulier;🎥|movie camera|caméra;📹|video camera|caméscope;📼|videotape|cassette vidéo;🔍|magnifying glass|loupe;💬|speech bubble|message;📧|email|e-mail;📨|incoming envelope|message reçu;📶|signal bars|signal;🔔|bell|notification;🔕|muted bell|sonnerie coupée;🔒|padlock|cadenas;🔓|open padlock|cadenas ouvert;⏱️|stopwatch|chronomètre;⏰|alarm clock|réveil;⌛|hourglass|sablier;🧲|magnet|aimant;⚙️|gear|engrenage;🛠️|tools|outils;🪫|low battery|batterie faible;🌐|internet|internet;🖼️|picture|image;📁|folder|dossier;📅|calendar|calendrier;📎|paperclip|trombone;🔗|link|lien;🚀|rocket|fusée;🛜|wifi|wifi;🎙️|studio microphone|micro de studio;📻|radio|radio;🕹️|joystick|manette;🔊|loudspeaker|haut-parleur;🔇|muted speaker|haut-parleur coupé;📤|outbox|envoi;📥|inbox|réception;🗑️|wastebasket|corbeille;🖲️|trackball|boule de commande"),
+   office:V("Bureau & argent","📝|memo|note;📋|clipboard|presse-papiers;📇|card index|fichier;📆|tear-off calendar|éphéméride;📈|rising chart|courbe en hausse;📉|falling chart|courbe en baisse;🖊️|pen|stylo;🖋️|fountain pen|stylo-plume;📏|ruler|règle;📐|set square|équerre;🗃️|card box|boîte d'archives;🗄️|filing cabinet|classeur;📑|bookmark tabs|onglets;📰|newspaper|journal;📮|postbox|boîte aux lettres;📦|package|colis;🔖|bookmark|marque-page;🖇️|linked paperclips|trombones;✉️|envelope|enveloppe;📒|ledger|registre;💰|money bag|sac d'argent;💵|banknote|billet;🪙|coin|pièce;🏧|ATM|distributeur;🏢|office building|immeuble de bureaux;🏪|shop|boutique;🧾|receipt|reçu;📔|notebook|carnet;🪪|ID card|carte d'identité;💳|credit card|carte bancaire;🧧|red envelope|enveloppe rouge;📬|full mailbox|boîte aux lettres")
+  });
+  CONFIG.free.visCat.push('fashion');
+})();
+
+
 render(false);
 </script>
 <script>
