@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1C2370">
-<meta name="description" content="Clearway English : programme d'anglais sur 90 jours, vocabulaire, reading, listening, speaking, writing, tests et vidéos.">
+<meta name="description" content="Clearway English : programme d'anglais sur 12 mois (360 jours), vocabulaire, reading, listening, speaking, writing, tests et vidéos.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Clearway">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Clearway English — Programme 90 Jours</title>
+<title>Clearway English — Programme 12 Mois</title>
 <style>
 :root{
   --ultra:#1C2370; --ultra-2:#2A34A6; --ultra-tint:#E3E6F7;
@@ -209,6 +209,11 @@ select{width:auto}
 .prembox b{color:#fff;font-size:14px}
 .lnk{background:none;border:0;color:#B9BFEF;text-decoration:underline;padding:0;font-size:12px}
 
+.hm{display:grid;grid-template-columns:repeat(20,1fr);gap:5px;margin-top:12px}
+.hm button{aspect-ratio:1;border:0;border-radius:6px;background:var(--mist);font-size:11px;color:var(--mut)}
+.hm button.done{background:var(--ultra);color:#fff}.hm button.curr{background:var(--amber);color:var(--ink);font-weight:700}
+.badge{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+.badge.off{opacity:.45;filter:grayscale(1)}.badge span{font-size:26px}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
   .side{display:none}
@@ -245,27 +250,19 @@ select{width:auto}
 <script>
 /* ============ CONFIGURATION PREMIUM & MOBILE MONEY (CÔTE D'IVOIRE) ============ */
 const CONFIG={
-  priceLabel:"5 000 FCFA / mois",
+  priceLabel:"10 000 FCFA / mois",
   momoNumber:"+225 07 57 33 37 36",
   momoRaw:"2250757333736",
-  /* Codes valides générés :
-     - CLW-2026-VIP1
-     - CLW-WAVE-5000
-     - CLW-OMCI-2026
-     - CLW-GOLD-9001
-     - CLW-PRO1-2026
-     - CLW-FAST-3373
-     - CLW-ABID-2026
-     - CLW-90JS-VIP8
-  */
+  days:30,
   codeHashes:[
+    "2800228999690325","6563418240282511","4821302899677356","266277272692446","8481280028910141","2234457778793074","8561452607645327","2131648118054068","2163163100515304","6007882809866564","5416775543484992","8429467756683307","4256052017239672","1639837467702257","4325270997501654","7564750041661330","2446624864083736","4163575560752893","7197310270555258","2344395195639695","3841409600194703","2412356013874147","5212405534181019","8071848298235281","536347776072933","6207044515676159","7451620242844840","7887469816868325","8123064637558405","8513760963121942",
     "4647857955071901","2849165932243017","5831609964143850","3592680832948715",
     "5610020132596924","6288583205126055","1421744294304284","5334793579297343",
     "6193261337082725","4813537626374129","7809158927514286","3737121614483031",
     "2562670709487639","5102975672716091","6489962364024002","8053960695412945"
   ],
   free:{
-    daysMax:5, // Les 5 premiers jours du parcours 90 jours sont gratuits
+    daysMax:5, phrase:['social'],dlg:['d1','d2'], // Les 5 premiers jours du parcours 90 jours sont gratuits
     vocab:['travel','daily'],
     reading:['r1'],
     listen:['l1'],
@@ -288,6 +285,8 @@ const store={
 };
 const cyrb53=(str,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);};
 const normCode=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const STORE_EXP='clw_premium_exp_v3',STORE_USED='clw_codes_used';
+const premExp=()=>{let e=+store.get(STORE_EXP)||0;if(!e&&store.get(STORE_PREM)==='1'){e=Date.now()+30*864e5;store.set(STORE_EXP,e);}return e;};
 const isLocked=(kind,id)=>!S.premium&&!CONFIG.free[kind].includes(id);
 const lockIco=()=>`<span class="lk" title="Contenu Premium">${ico('lock')}</span>`;
 const lk=(k,i)=>isLocked(k,i)?lockIco():'';
@@ -297,7 +296,7 @@ let lastFocus=null;
 function closePaywall(){const m=document.getElementById('paywall');if(m){m.remove();if(lastFocus&&lastFocus.focus)lastFocus.focus();}}
 function paywall(feature){
   closePaywall();lastFocus=document.activeElement;
-  const waMsg=encodeURIComponent(`Bonjour Clearway English ! Je viens d'effectuer le paiement de 5 000 FCFA pour mon abonnement Premium (1 mois). Merci de m'envoyer mon code d'activation.`);
+  const waMsg=encodeURIComponent(`Bonjour Clearway English ! Je viens d'effectuer le paiement de 10 000 FCFA pour mon abonnement Premium (1 mois). Merci de m'envoyer mon code d'activation.`);
   const m=document.createElement('div');m.id='paywall';m.className='modal';
   m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pwt">
     <button class="x" data-act="pwclose" aria-label="Fermer">×</button>
@@ -306,18 +305,20 @@ function paywall(feature){
     
     <div class="price-tag">
       <div><span class="small">Abonnement tout inclus</span><br><b>${esc(CONFIG.priceLabel)}</b></div>
-      <span class="lv lv-C">Sans engagement</span>
+      <span class="lv lv-C">Accès 30 jours</span>
     </div>
 
     <ul class="benefits">
-      <li>✅ <b>Programme complet 90 jours</b> (Séquences quotidiennes A1 → C1)</li>
+      <li>✅ <b>Programme complet 12 mois</b> (360 séquences quotidiennes A1 → C1)</li>
       <li>✅ <b>100 mots de vocabulaire</b> en 10 thèmes + audio</li>
+      <li>✅ <b>Dialogues audio, dictionnaire visuel complet</b> (animaux, shopping, tech, IA)</li>
+      <li>✅ <b>Quiz du jour, révisions espacées</b> et 5 packs d'expressions</li>
       <li>✅ <b>Atelier Speaking</b> avec reconnaissance vocale</li>
       <li>✅ <b>Tous les textes, audios, dictées, essais et tests</b></li>
     </ul>
 
     <div class="momo-box">
-      <div class="small" style="font-weight:600;margin-bottom:6px">1. Effectuez votre dépôt de 5 000 FCFA via :</div>
+      <div class="small" style="font-weight:600;margin-bottom:6px">1. Effectuez votre dépôt de 10 000 FCFA via :</div>
       <div class="momo-badges">
         <span class="badge-wave">📱 Wave Côte d'Ivoire</span>
         <span class="badge-om">🟠 Orange Money</span>
@@ -347,8 +348,8 @@ function paywall(feature){
 function updatePrem(){
   const b=document.getElementById('prembox');if(!b)return;
   b.innerHTML=S.premium
-    ?'<b>⭐ Membre Premium Actif</b><span class="small">Accès complet 90 jours débloqué.</span><button class="lnk" data-act="premoff">Désactiver sur cet appareil</button>'
-    :`<b>Version Gratuite</b><span class="small">Débloquez les 90 jours (${CONFIG.priceLabel}).</span><button class="btn amber sm" style="width:100%" data-act="paywall" data-f="">Passer en Premium</button>`;
+    ?'<b>⭐ Membre Premium Actif</b><span class="small">Il reste '+Math.max(1,Math.ceil((premExp()-Date.now())/864e5))+' jour(s) d\'accès.</span><button class="lnk" data-act="premoff">Désactiver sur cet appareil</button>'
+    :`<b>Version Gratuite</b><span class="small">Débloquez les 12 mois (${CONFIG.priceLabel}).</span><button class="btn amber sm" style="width:100%" data-act="paywall" data-f="">Passer en Premium</button>`;
 }
 
 function premBanner(){
@@ -356,9 +357,9 @@ function premBanner(){
   return `<div class="banner">
     <div>
       <h3>Passez à la vitesse supérieure avec Clearway Premium</h3>
-      <p class="mut" style="margin:4px 0 0;max-width:58ch">Débloquez les <b>90 jours de séquences guidées</b>, les 100 mots de vocabulaire, le coach vocal et tous les examens blancs pour seulement <b>${esc(CONFIG.priceLabel)}</b> (Wave / Orange Money).</p>
+      <p class="mut" style="margin:4px 0 0;max-width:58ch">Débloquez les <b>360 jours de séquences guidées</b>, les 100 mots de vocabulaire, le coach vocal et tous les examens blancs pour seulement <b>${esc(CONFIG.priceLabel)}</b> (Wave / Orange Money).</p>
     </div>
-    <button class="btn" data-act="paywall" data-f="">Activer Premium (5 000 F)</button>
+    <button class="btn" data-act="paywall" data-f="">Activer Premium (10 000 F)</button>
   </div>`;
 }
 
@@ -379,15 +380,21 @@ const ICONS={
   video:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/>',
   speaker:'<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 010 6"/><path d="M18.5 6.5a8 8 0 010 11"/>',
   stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+  trophy:'<path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3"/><path d="M12 13v4M8 20h8"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>'
 };
 const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 const NAV=[
   {id:'home',label:'Accueil',ic:'home'},
-  {id:'plan',label:'Parcours 90 Jours',ic:'plan'},
+  {id:'plan',label:'Parcours 12 Mois',ic:'plan'},
+  {id:'quiz',label:'Quiz',ic:'tests'},
+  {id:'progress',label:'Progrès',ic:'trophy'},
   {id:'vocab',label:'Vocabulaire',ic:'vocab'},
+  {id:'phrases',label:'Expressions',ic:'chat'},
   {id:'reading',label:'Reading',ic:'read'},
   {id:'listening',label:'Listening',ic:'listen'},
+  {id:'dialogues',label:'Dialogues',ic:'chat'},
   {id:'speaking',label:'Speaking',ic:'speak'},
   {id:'writing',label:'Writing',ic:'write'},
   {id:'tests',label:'Tests',ic:'tests'},
@@ -484,7 +491,7 @@ function runQuiz(el,qs,opts={}){
   show();
 }
 
-/* ============ Données : Programme 90 Jours ============ */
+/* ============ Données : Programme 12 Mois ============ */
 const CURRICULUM_TOPICS=[
   // Mois 1 : Jours 1-30 (Fondations A1-A2)
   ["Salutations & Présentations","Present simple (to be)","Se présenter en 3 phrases à voix haute."],
@@ -580,8 +587,22 @@ const CURRICULUM_TOPICS=[
   ["Négociation Complexe","Faire des concessions conditionnelles","Simuler un accord commercial."],
   ["Révision Finale 1","Bilan des 100 mots de vocabulaire","Faire un sans-faute aux quiz vocabulaire."],
   ["Révision Finale 2","Bilan Grammaire & Syntaxe","Revoir tous les tableaux Visual Aids."],
-  ["Certification Finale 90 Jours","Test Final A1–C1","Obtenir son score final Clearway !"]
+  ["Bilan Trimestre 1 (Jour 90)","Test Final A1–C1","Obtenir son score trimestriel Clearway !"]
 ];
+const TOTAL=360;
+const levelOf=d=>d<=30?'A1–A2':d<=60?'B1':d<=90?'B2–C1':d<=270?'B2':'C1';
+const MONTHS=[{t:"Fondations (A1–A2)",v:"daily",s:"".split("|")},{t:"Fluidité (B1)",v:"work",s:"".split("|")},{t:"Maîtrise (B2–C1)",v:"tech",s:"".split("|")},{t:"Technologie & IA",v:"ai",s:"Smartphone & applications|Mots de passe & sécurité|Réseaux sociaux|Parler à une IA (prompts)|Écrire avec l'IA|IA et emploi|Éthique & biais|Données & vie privée|Objets connectés|Cybersécurité|Startups africaines|Paiement mobile|Télétravail & outils".split("|")},{t:"Shopping & Consommation",v:"shopping",s:"Boutique de vêtements|Marché & marchandage|Supermarché|Acheter en ligne|Retours & remboursements|Réclamer poliment|Comparer des produits|Soldes & promotions|Électronique|Offrir un cadeau|Budget & dépenses|Publicité|Consommation responsable".split("|")},{t:"Voyage & Cultures",v:"travel",s:"À l'aéroport|À l'hôtel|Louer une voiture|Transports en commun|Visiter une ville|Restaurants du monde|Fêtes & traditions|Londres vs New York|Voyager en Afrique|Urgences en voyage|Planifier un itinéraire|Raconter un voyage|Politesse interculturelle".split("|")},{t:"Carrière & Business",v:"business",s:"Rédiger un CV|Lettre de motivation|Entretien d'embauche|Réunions|Présentations|E-mails formels|Négociation|Service client|Gestion d'équipe|Ventes & marketing|Finance d'entreprise|Networking|Entreprendre".split("|")},{t:"Santé & Bien-être",v:"health",s:"Chez le médecin|À la pharmacie|Alimentation|Sport & fitness|Sommeil & stress|Santé mentale|Hôpital & urgences|Maladies courantes|Hygiène de vie|Médecine traditionnelle|Santé publique|Décrire un symptôme|Bien-être au travail".split("|")},{t:"Actualités & Société",v:"law",s:"Lire les actualités|Économie|Environnement|Éducation|Démocratie|Médias|Droits & justice|Migration|Jeunesse & emploi|Urbanisation|Culture & arts|Santé publique|Débat de société".split("|")},{t:"Animaux & Nature",v:"abidjan",s:"Animaux sauvages|Animaux de ferme|Animaux domestiques|Oiseaux & insectes|Vie marine|Safari|Parcs nationaux|Agriculture|Climat & saisons|Forêts & lagunes|Protection de la faune|Chez le vétérinaire|Décrire un paysage".split("|")},{t:"Études & Examens",v:"academic",s:"IELTS Reading|IELTS Listening|IELTS Writing 1|IELTS Writing 2|IELTS Speaking 1|IELTS Speaking 2|TOEFL Integrated|Vocabulaire académique|Prendre des notes|Résumer & paraphraser|Gérer son temps|Graphiques & données|Simulation d'examen".split("|")},{t:"Maîtrise & Culture",v:"emotions",s:"Idiomes avancés|Humour & ironie|Storytelling|Débat avancé|Anglais des médias|Argot & registres|Discours public|Négociation complexe|Littérature courte|Podcasts & TED|Accents du monde|Projet personnel|Certification finale".split("|")}];
+(()=>{
+ const GR=["Present perfect continuous","Voix passive (tous les temps)","Propositions relatives (whose, where)","Conditionnels mixtes","Discours indirect avancé","Modaux du passé (must have)","Inversion pour l'emphase","Phrases clivées (It was... that)","Propositions participiales","Wish / If only","Causatif (have something done)","Futur parfait & continu","Articles & quantificateurs"];
+ const MI=["Dites 5 phrases à voix haute sur : ","Écrivez 80 mots sur : ","Défendez une opinion à l'oral sur : "];
+ for(let m=4;m<=12;m++){const X=MONTHS[m-1];X.desc='Mois '+m+' (Jours '+((m-1)*30+1)+'–'+m*30+') : '+X.t+'. Niveau '+levelOf((m-1)*30+1)+'.';
+  for(let i=0;i<30;i++){
+   if(i===29){CURRICULUM_TOPICS.push([m===12?"Certification finale 1 an":"Bilan du mois : "+X.t,"Validation du Mois "+m,"Passer un test de la rubrique Tests et noter votre score."]);continue;}
+   if(i%7===6){CURRICULUM_TOPICS.push(["Révision semaine : "+X.t,"Consolidation des 6 derniers jours","Refaire les quiz et réécouter un dialogue de la semaine."]);continue;}
+   const k=i-Math.floor(i/7);
+   CURRICULUM_TOPICS.push([X.s[k%13]+(k>=13?" (approfondir)":""),GR[(k+m)%13],MI[k%3]+X.s[k%13].toLowerCase()+"."]);
+  }}
+})();
 
 /* ============ Données : vocabulaire (10 thèmes = 100 mots) ============ */
 const VOCAB={
@@ -694,7 +715,59 @@ const VOCAB={
   ["policy","/ˈpɒləsi/","politique, règlement","What is the company's refund policy?"],
   ["citizen","/ˈsɪtɪzn/","citoyen","Every citizen has the right to vote."],
   ["sustainability","/səˌsteɪnəˈbɪləti/","durabilité","Sustainability is vital for our planet."],
-  ["inequality","/ˌɪnɪˈkwɒləti/","inégalité","Education helps reduce social inequality."]]}
+  ["inequality","/ˌɪnɪˈkwɒləti/","inégalité","Education helps reduce social inequality."]]},
+ abidjan:{label:"Vivre à Abidjan",words:[
+  ["traffic jam","/ˈtræfɪk dʒæm/","embouteillage","I was late because of the traffic jam."],
+  ["street vendor","/striːt ˈvendə/","vendeur ambulant","The street vendor sells fresh mangoes."],
+  ["lagoon","/ləˈɡuːn/","lagune","We crossed the lagoon by boat."],
+  ["market","/ˈmɑːkɪt/","marché","I buy vegetables at the market."],
+  ["minibus","/ˈmɪnibʌs/","minibus (gbaka)","The minibus is full this morning."],
+  ["cocoa","/ˈkəʊkəʊ/","cacao","Côte d'Ivoire is the largest cocoa producer."],
+  ["plantain","/ˈplæntɪn/","banane plantain","We fry plantain with spicy sauce."],
+  ["humid","/ˈhjuːmɪd/","humide","The weather is hot and humid today."],
+  ["rainy season","/ˈreɪni ˈsiːzn/","saison des pluies","The rainy season starts in April."],
+  ["neighbourhood","/ˈneɪbəhʊd/","quartier","My neighbourhood is quiet at night."]]},
+ shopping:{label:"Shopping",words:[
+  ["receipt","/rɪˈsiːt/","reçu","Keep the receipt in case you need a refund."],
+  ["discount","/ˈdɪskaʊnt/","réduction","They offer a ten percent discount."],
+  ["refund","/ˈriːfʌnd/","remboursement","I would like a refund, please."],
+  ["cashier","/kæˈʃɪə/","caissier(ère)","The cashier scanned my items."],
+  ["fitting room","/ˈfɪtɪŋ ruːm/","cabine d'essayage","Where is the fitting room?"],
+  ["bargain","/ˈbɑːɡɪn/","bonne affaire","This jacket was a real bargain."],
+  ["checkout","/ˈtʃekaʊt/","caisse","There is a long queue at the checkout."],
+  ["size","/saɪz/","taille","Do you have this in a larger size?"],
+  ["warranty","/ˈwɒrənti/","garantie","The phone has a two-year warranty."],
+  ["delivery","/dɪˈlɪvəri/","livraison","Delivery takes three working days."]]},
+ ai:{label:"Intelligence artificielle",words:[
+  ["artificial intelligence","/ˌɑːtɪˈfɪʃl ɪnˈtelɪdʒəns/","intelligence artificielle","Artificial intelligence is changing many jobs."],
+  ["algorithm","/ˈælɡərɪðəm/","algorithme","The algorithm recommends videos to users."],
+  ["prompt","/prɒmpt/","instruction donnée à l'IA","A clear prompt gives a better answer."],
+  ["machine learning","/məˈʃiːn ˈlɜːnɪŋ/","apprentissage automatique","Machine learning needs a lot of data."],
+  ["chatbot","/ˈtʃætbɒt/","agent conversationnel","The bank has a chatbot for simple questions."],
+  ["dataset","/ˈdeɪtəset/","jeu de données","The team cleaned the dataset first."],
+  ["automation","/ˌɔːtəˈmeɪʃn/","automatisation","Automation saves hours of repetitive work."],
+  ["bias","/ˈbaɪəs/","biais","Researchers try to reduce bias in AI systems."],
+  ["privacy","/ˈprɪvəsi/","vie privée","Protect your privacy online."],
+  ["to generate","/ˈdʒenəreɪt/","générer","The tool can generate a summary in seconds."]]},
+ internet:{label:"Internet & Smartphone",words:[
+  ["password","/ˈpɑːswɜːd/","mot de passe","Never share your password."],
+  ["download","/ˈdaʊnləʊd/","télécharger","I need to download the app first."],
+  ["app","/æp/","application","This app helps me learn English."],
+  ["notification","/ˌnəʊtɪfɪˈkeɪʃn/","notification","I turned off notifications at night."],
+  ["battery","/ˈbætəri/","batterie","My battery is almost dead."],
+  ["screenshot","/ˈskriːnʃɒt/","capture d'écran","Send me a screenshot of the error."],
+  ["update","/ˈʌpdeɪt/","mise à jour","Please install the latest update."],
+  ["cloud storage","/klaʊd ˈstɔːrɪdʒ/","stockage en ligne","I keep my photos in cloud storage."],
+  ["Wi-Fi","/ˈwaɪ faɪ/","Wi-Fi","Is there free Wi-Fi here?"],
+  ["social media","/ˈsəʊʃl ˈmiːdiə/","réseaux sociaux","She works in social media marketing."]]}
+};
+
+const PHRASES={
+ social:{label:"Rencontres",items:[["Nice to meet you. I'm from Abidjan.","Enchanté. Je viens d'Abidjan."],["Could you say that again, please?","Pouvez-vous répéter, s'il vous plaît ?"],["What do you do for a living?","Que faites-vous dans la vie ?"],["I'm still learning English, so please speak slowly.","J'apprends encore l'anglais, parlez lentement."],["Let's keep in touch.","Restons en contact."]]},
+ cafe:{label:"Café & restaurant",items:[["Could I see the menu, please?","Puis-je voir la carte, s'il vous plaît ?"],["I'll have the grilled fish with rice.","Je prendrai le poisson braisé avec du riz."],["Is the service included?","Le service est-il compris ?"],["Could we have the bill, please?","L'addition, s'il vous plaît."],["I'm allergic to peanuts.","Je suis allergique aux arachides."]]},
+ work:{label:"Au travail",items:[["I'll send you the report by Friday.","Je vous envoie le rapport d'ici vendredi."],["Could we reschedule the meeting?","Pouvons-nous reprogrammer la réunion ?"],["I'd like to follow up on my email.","Je reviens vers vous au sujet de mon e-mail."],["Let me check and get back to you.","Je vérifie et je reviens vers vous."],["We are on track to meet the deadline.","Nous sommes dans les temps pour la date limite."]]},
+ travel:{label:"Voyage & transport",items:[["Where is the check-in desk?","Où est le comptoir d'enregistrement ?"],["My luggage has not arrived.","Mes bagages ne sont pas arrivés."],["How much is a ticket to the city centre?","Combien coûte un billet pour le centre-ville ?"],["Could you drop me at the next stop?","Pouvez-vous me déposer au prochain arrêt ?"],["I have a reservation under the name Kouassi.","J'ai une réservation au nom de Kouassi."]]},
+ urgent:{label:"Santé & urgences",items:[["I need a doctor, it's urgent.","J'ai besoin d'un médecin, c'est urgent."],["I have a fever and a bad headache.","J'ai de la fièvre et un fort mal de tête."],["Please call an ambulance.","Appelez une ambulance, s'il vous plaît."],["I've lost my passport.","J'ai perdu mon passeport."],["Is there a pharmacy nearby?","Y a-t-il une pharmacie près d'ici ?"]]}
 };
 
 /* ============ Données : reading ============ */
@@ -785,7 +858,7 @@ const SPEAKING_PROMPTS=[
   {lv:"B1",cat:"Travail",en:"I would like to schedule a meeting to discuss our new project.",fr:"J'aimerais planifier une réunion pour discuter de notre nouveau projet."},
   {lv:"B1",cat:"Opinion",en:"In my opinion, learning English opens many international opportunities.",fr:"À mon avis, apprendre l'anglais ouvre de nombreuses opportunités internationales."},
   {lv:"B2",cat:"Entretien",en:"I am a reliable team player with strong problem-solving skills.",fr:"Je suis un équipier fiable avec de solides compétences en résolution de problèmes."},
-  {lv:"C1",cat:"Négociation",en:"Although the budget is tight, we are confident we can deliver on time.",fr:"Bien que le budget soit serré, nous sommes convaincus de pouvoir livrer à temps."}
+  {lv:"C1",cat:"Négociation",en:"Although the budget is tight, we are confident we can deliver on time.",fr:"Bien que le budget serré, nous sommes convaincus de pouvoir livrer à temps."}
 ];
 
 /* ============ Données : writing ============ */
@@ -886,7 +959,19 @@ const VISUAL={
  food:{label:"Nourriture",items:[["🍎","apple","pomme"],["🍞","bread","pain"],["🧀","cheese","fromage"],["🥚","egg","œuf"],["🥕","carrot","carotte"],["🍅","tomato","tomate"],["🍗","chicken","poulet"],["🍚","rice","riz"],["🥛","milk","lait"],["🍰","cake","gâteau"]]},
  transport:{label:"Transports",items:[["🚗","car","voiture"],["🚌","bus","bus"],["🚆","train","train"],["✈️","plane","avion"],["🚲","bicycle","vélo"],["🚢","ship","bateau"],["🚕","taxi","taxi"],["🏍️","motorcycle","moto"],["🚁","helicopter","hélicoptère"],["🚋","tram","tramway"]]},
  home:{label:"Maison",items:[["🏠","house","maison"],["🛏️","bed","lit"],["🪑","chair","chaise"],["🔑","key","clé"],["💡","lamp","lampe"],["🚪","door","porte"],["🪟","window","fenêtre"],["🕒","clock","horloge"],["🛋️","sofa","canapé"],["🛁","bathtub","baignoire"]]},
- weather:{label:"Météo",items:[["☀️","sun","soleil"],["🌧️","rain","pluie"],["❄️","snow","neige"],["☁️","cloud","nuage"],["💨","wind","vent"],["⛈️","storm","orage"],["🌈","rainbow","arc-en-ciel"],["🌫️","fog","brouillard"],["🌡️","thermometer","thermomètre"],["☂️","umbrella","parapluie"]]}
+ weather:{label:"Météo",items:[["☀️","sun","soleil"],["🌧️","rain","pluie"],["❄️","snow","neige"],["☁️","cloud","nuage"],["💨","wind","vent"],["⛈️","storm","orage"],["🌈","rainbow","arc-en-ciel"],["🌫️","fog","brouillard"],["🌡️","thermometer","thermomètre"],["☂️","umbrella","parapluie"]]},
+ wild:{label:"Animaux sauvages",items:[["🦁","lion","lion"],["🐘","elephant","éléphant"],["🦒","giraffe","girafe"],["🦓","zebra","zèbre"],["🐵","monkey","singe"],["🐊","crocodile","crocodile"],["🦛","hippo","hippopotame"],["🐆","leopard","léopard"],["🦏","rhino","rhinocéros"],["🐍","snake","serpent"]]},
+ farm:{label:"Ferme & oiseaux",items:[["🐄","cow","vache"],["🐖","pig","cochon"],["🐑","sheep","mouton"],["🐐","goat","chèvre"],["🐓","rooster","coq"],["🦆","duck","canard"],["🐴","horse","cheval"],["🐇","rabbit","lapin"],["🦅","eagle","aigle"],["🦜","parrot","perroquet"]]},
+ sea:{label:"Mer & insectes",items:[["🐟","fish","poisson"],["🦈","shark","requin"],["🐬","dolphin","dauphin"],["🐙","octopus","pieuvre"],["🐢","turtle","tortue"],["🦀","crab","crabe"],["🐝","bee","abeille"],["🦋","butterfly","papillon"],["🕷️","spider","araignée"],["🐜","ant","fourmi"]]},
+ shop:{label:"Shopping",items:[["🛒","trolley","chariot"],["💳","bank card","carte bancaire"],["🧾","receipt","reçu"],["👕","shirt","chemise"],["👟","trainers","baskets"],["👜","handbag","sac à main"],["🏷️","price tag","étiquette de prix"],["🎁","gift","cadeau"],["🛍️","shopping bag","sac de courses"],["💵","cash","espèces"]]},
+ tech:{label:"Technologie",items:[["💻","laptop","ordinateur portable"],["📱","smartphone","téléphone"],["🔋","battery","batterie"],["🎧","headphones","casque audio"],["📷","camera","appareil photo"],["🖨️","printer","imprimante"],["⌨️","keyboard","clavier"],["🖱️","mouse","souris"],["📡","satellite dish","antenne"],["🤖","robot","robot"]]},
+ fruits:{label:"Fruits",items:[["🍌","banana","banane"],["🍍","pineapple","ananas"],["🥭","mango","mangue"],["🍉","watermelon","pastèque"],["🍇","grapes","raisin"],["🍋","lemon","citron"],["🥥","coconut","noix de coco"],["🍓","strawberry","fraise"],["🍑","peach","pêche"],["🍒","cherry","cerise"]]},
+ veg:{label:"Légumes",items:[["🥕","carrot","carotte"],["🍅","tomato","tomate"],["🧅","onion","oignon"],["🥔","potato","pomme de terre"],["🌽","corn","maïs"],["🥦","broccoli","brocoli"],["🍆","aubergine","aubergine"],["🌶️","chilli pepper","piment"],["🧄","garlic","ail"],["🥬","lettuce","laitue"]]},
+ body:{label:"Corps humain",items:[["👁️","eye","œil"],["👂","ear","oreille"],["👃","nose","nez"],["👄","mouth","bouche"],["🦷","tooth","dent"],["✋","hand","main"],["🦶","foot","pied"],["🧠","brain","cerveau"],["❤️","heart","cœur"],["🦴","bone","os"]]},
+ clothes:{label:"Vêtements",items:[["👖","trousers","pantalon"],["👗","dress","robe"],["🧥","coat","manteau"],["🧢","cap","casquette"],["🧦","socks","chaussettes"],["👓","glasses","lunettes"],["⌚","watch","montre"],["🧣","scarf","écharpe"],["🎒","backpack","sac à dos"],["👔","tie","cravate"]]},
+ jobs:{label:"Métiers",items:[["👩‍⚕️","doctor","médecin"],["👩‍🏫","teacher","enseignante"],["👨‍🍳","chef","cuisinier"],["👮","police officer","policier"],["👨‍🌾","farmer","agriculteur"],["👩‍💻","developer","développeuse"],["👷","builder","ouvrier du bâtiment"],["👩‍🚒","firefighter","pompier"],["🧑‍✈️","pilot","pilote"],["🧑‍🔧","mechanic","mécanicien"]]},
+ sports:{label:"Sports",items:[["⚽","football","football"],["🏀","basketball","basket"],["🎾","tennis","tennis"],["🏊","swimming","natation"],["🚴","cycling","cyclisme"],["🥊","boxing","boxe"],["🏃","running","course à pied"],["🏐","volleyball","volley"],["🏓","table tennis","tennis de table"],["⛳","golf","golf"]]},
+ nature:{label:"Nature",items:[["🌳","tree","arbre"],["🌸","flower","fleur"],["⛰️","mountain","montagne"],["🌊","wave","vague"],["🔥","fire","feu"],["🌙","moon","lune"],["⭐","star","étoile"],["🌈","rainbow","arc-en-ciel"],["🏜️","desert","désert"],["🌋","volcano","volcan"]]}
 };
 const TENSES={
  past:[["Past simple","Action terminée à un moment précis du passé.","I visited Rome in 2019."],["Past continuous","Action en cours dans le passé.","I was walking when it started to rain."],["Past perfect","Action antérieure à une autre action passée.","I had finished before she arrived."]],
@@ -910,7 +995,7 @@ const VIDEOS=[
 const savedData=(()=>{try{return JSON.parse(store.get(STORE_DATA)||'null');}catch(e){return null;}})();
 const S={
   view:'home',
-  premium:store.get(STORE_PREM)==='1',
+  premium:Date.now()<premExp(),
   xp:savedData?.xp||0,
   streak:savedData?.streak||1,
   goal:50,
@@ -926,7 +1011,7 @@ const S={
   write:{task:'w1',texts:{},reports:{},model:{}},
   test:{open:null},
   vis:{tab:'dict',cat:'animals'},
-  vid:{id:null,msg:''}
+  vid:{id:null,msg:''},phr:{cat:'social'},dlg:{open:null,hide:false},qz:{run:null}
 };
 
 /* ============ Rendu général ============ */
@@ -953,10 +1038,14 @@ V.home=()=>{
   const d=new Date(),doy=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);
   const w=all[doy%all.length];
   const R=48,C=2*Math.PI*R,pct=Math.min(1,S.xp/S.goal);
-  const nextDay=Math.min(90,S.daysDone.size+1);
+  const nextDay=Math.min(TOTAL,S.daysDone.size+1);
   const tiles=[
-   ['plan',"Parcours 90 Jours",`Votre programme quotidien structuré sur 3 mois (${S.daysDone.size}/90 jours faits).`],
+   ['plan',"Parcours 12 Mois",`Votre programme quotidien structuré sur 12 mois (${S.daysDone.size}/${TOTAL} jours faits).`],
    ['vocab',"Vocabulaire",`${all.length} mots en 10 thèmes avec cartes mémoire, phonétique et quiz.`],
+   ['quiz',"Quiz","Des centaines de questions : mots, phrases à trous, images, défi mixte."],
+   ['progress',"Progrès","Votre carte des 90 jours, badges et niveau estimé."],
+   ['phrases',"Expressions","Phrases utiles par situation : café, travail, voyage, urgences."],
+   ['dialogues',"Dialogues","8 conversations audio à deux voix, texte masquable."],
    ['speaking',"Speaking (Oral)","Entraînez votre prononciation avec reconnaissance vocale."],
    ['reading',"Reading","Textes de A2 à B2 avec glossaire cliquable et questions."],
    ['listening',"Listening","Dialogues, annonces, exposés professionnels et dictées audio."],
@@ -977,14 +1066,14 @@ V.home=()=>{
     </div>
     <div class="card goal">
       <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${R}" fill="none" stroke="#EEF1F8" stroke-width="12"/><circle cx="60" cy="60" r="${R}" fill="none" stroke="#1C2370" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}"/></svg><b>${Math.round(pct*100)}%</b></div>
-      <div><b>Objectif du jour</b><div class="small mut">${S.xp} / ${S.goal} XP · ${S.daysDone.size}/90 jours</div></div>
+      <div><b>Objectif du jour</b><div class="small mut">${S.xp} / ${S.goal} XP · ${S.daysDone.size}/${TOTAL} jours</div></div>
       <div class="stats"><div><b>${S.known.size}</b><span>mots acquis</span></div><div><b>${S.tests.length}</b><span>tests faits</span></div><div><b>${S.best||'–'}</b><span>niveau</span></div></div>
     </div>
   </div>
   
   <div class="card" style="margin-bottom:20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:space-between;border-left:5px solid var(--ultra)">
     <div>
-      <span class="lv lv-B">Séquence du jour · Jour ${nextDay} / 90</span>
+      <span class="lv lv-B">Séquence du jour · Jour ${nextDay} / ${TOTAL}</span>
       <h3 style="margin-top:6px">${esc(CURRICULUM_TOPICS[nextDay-1][0])}</h3>
       <p class="mut small" style="margin:4px 0 0">Grammaire : ${esc(CURRICULUM_TOPICS[nextDay-1][1])}</p>
     </div>
@@ -996,7 +1085,7 @@ V.home=()=>{
   <div class="grid">${tiles.map(t=>`<button class="card tile" data-act="nav" data-v="${t[0]}"><span class="ic">${ico(NAV.find(n=>n.id===t[0]).ic)}</span><h3>${t[1]}</h3><span class="mut small">${t[2]}</span></button>`).join('')}</div>`;
 };
 
-/* ============ Parcours 90 Jours ============ */
+/* ============ Parcours 12 Mois ============ */
 V.plan=()=>{
   const m=S.plan.month;
   const openD=S.plan.openDay;
@@ -1004,18 +1093,26 @@ V.plan=()=>{
     const idx=openD-1;
     const topic=CURRICULUM_TOPICS[idx];
     const allWords=Object.values(VOCAB).flatMap(t=>t.words);
-    const dayWords=[allWords[(idx*3)%allWords.length], allWords[(idx*3+1)%allWords.length], allWords[(idx*3+2)%allWords.length]];
+    const wordsFor=d=>{const tw=d>90?VOCAB[MONTHS[Math.ceil(d/30)-1].v].words:allWords,o=d>90?(d-91)*3:(d-1)*3;return[0,1,2].map(k=>tw[(o+k)%tw.length]);};
+    const dayWords=wordsFor(openD);
     const isDone=S.daysDone.has(openD);
-    const lv=openD<=30?'A1–A2':openD<=60?'B1':'B2–C1';
+    const lv=levelOf(openD);
+    const prevW=idx>0?wordsFor(openD-1):[];
+    const dg=DIALOGUES[idx%DIALOGUES.length];
+    const pk=Object.keys(PHRASES),phr=PHRASES[pk[idx%pk.length]].items[idx%5];
+    const rd=READINGS[idx%READINGS.length];
+    const mkq=w=>Q('Que signifie « '+w[0]+' » ?',w[2],shuffle(allWords.filter(x=>x[2]!==w[2])).slice(0,3).map(x=>x[2]),w[3]);
+    const dayQs=shuffle([...dayWords,...prevW].flatMap(w=>vq(w,allWords))).slice(0,12);
 
     $('#view').innerHTML=`<button class="btn ghost sm" data-act="dayback">← Retour au calendrier 90 jours</button>
     <div class="pagehead" style="margin-top:16px">
       <div class="row"><span class="lv lv-${lv[0]}">Mois ${Math.ceil(openD/30)} · ${lv}</span>${isDone?'<span class="lv lv-A">✓ Séquence validée</span>':''}</div>
       <h1 style="margin-top:8px">Jour ${openD} : ${esc(topic[0])}</h1>
-      <p>Temps estimé : 15 à 20 minutes. Complétez les 3 étapes ci-dessous pour valider votre journée.</p>
+      <p>Temps estimé : 25 à 30 minutes. Complétez les 7 étapes ci-dessous pour valider votre journée.</p>
     </div>
 
     <div class="card" style="max-width:780px">
+      ${prevW.length?`<div class="seq-step" style="border-left-color:var(--mut)"><h4>Échauffement : réviser hier (2 min)</h4><p class="small mut">Relisez à voix haute les mots du Jour ${openD-1} avant de commencer :</p><p style="margin:0"><b>${prevW.map(w=>esc(w[0])).join(' · ')}</b></p></div>`:''}
       <div class="seq-step">
         <h4>Étape 1 : Vocabulaire clé du jour (5 min)</h4>
         <p class="small mut">Écoutez et répétez ces 3 mots essentiels :</p>
@@ -1047,23 +1144,42 @@ V.plan=()=>{
         </div>
       </div>
 
+      <div class="seq-step" style="border-left-color:var(--om)">
+        <h4>Étape 4 : Phrase du jour (2 min)</h4>
+        <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><b>${esc(phr[0])}</b><div class="small mut">${esc(phr[1])}</div></div>${spk(phr[0],0.9)}</div>
+      </div>
+      <div class="seq-step" style="border-left-color:var(--wave)">
+        <h4>Étape 5 : Lecture guidée (5 min)</h4>
+        <p class="small mut">Texte conseillé aujourd'hui : <b>${esc(rd.title||'Reading')}</b></p>
+        <button class="btn sm ghost" data-act="goread" data-id="${rd.id}">Lire le texte</button>
+      </div>
+      <div class="seq-step" style="border-left-color:var(--ok)">
+        <h4>Étape 6 : Dialogue du jour (4 min)</h4>
+        <p class="small mut">Écoutez, puis rejouez les deux rôles : <b>${esc(dg.t)}</b></p>
+        <button class="btn sm ghost" data-act="godlg" data-id="${dg.id}">Ouvrir le dialogue</button>
+      </div>
+      <div class="seq-step" style="border-left-color:var(--ultra-2)">
+        <h4>Étape 7 : Quiz du jour, 12 questions (5 min)</h4>
+        <div id="dayquiz"></div>
+      </div>
       <div class="row" style="justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)">
         <button class="btn ${isDone?'ghost':'ok'}" data-act="toggleday" data-d="${openD}">
           ${isDone?'✓ Journée terminée (+20 XP gagnés)':'Valider le Jour '+openD+' (+20 XP)'}
         </button>
-        ${openD<90?`<button class="btn" data-act="openday" data-d="${openD+1}">Jour suivant (${openD+1}) →</button>`:''}
+        ${openD<TOTAL?`<button class="btn" data-act="openday" data-d="${openD+1}">Jour suivant (${openD+1}) →</button>`:''}
       </div>
     </div>`;
+    {const dq=$('#dayquiz');if(dq)runQuiz(dq,dayQs);}
     return;
   }
 
   const start=(m-1)*30+1, end=m*30;
-  const pct=Math.round(S.daysDone.size/90*100);
+  const pct=Math.round(S.daysDone.size/TOTAL*100);
   const monthDesc={
     1:"Mois 1 (Jours 1–30) : Bases solides, survie au quotidien, présent, passé simple et vocabulaire essentiel (Niveau A1–A2).",
     2:"Mois 2 (Jours 31–60) : Fluidité, present perfect, conditionnels, phrasal verbs et anglais professionnel (Niveau B1).",
     3:"Mois 3 (Jours 61–90) : Maîtrise avancée, argumentation, négociation, préparation IELTS/TOEFL et nuances (Niveau B2–C1)."
-  }[m];
+  }[m]||MONTHS[m-1].desc;
 
   let cards='';
   for(let d=start;d<=end;d++){
@@ -1078,16 +1194,74 @@ V.plan=()=>{
 
   $('#view').innerHTML=head("Parcours Intensif 3 Mois (90 Jours)","Un programme étape par étape : 15 à 20 minutes par jour pour passer de débutant à un anglais fluide et professionnel.")+
   `<div class="card" style="margin-bottom:20px">
-    <div class="row" style="justify-content:space-between;margin-bottom:8px"><b>Progression globale : ${S.daysDone.size} / 90 jours complétés</b><b>${pct} %</b></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><b>Progression globale : ${S.daysDone.size} / ${TOTAL} jours complétés</b><b>${pct} %</b></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>
   <div class="tabs">
-    <button class="chip ${m===1?'on':''}" data-act="pmonth" data-m="1">Mois 1 : Fondations (A1–A2)</button>
-    <button class="chip ${m===2?'on':''}" data-act="pmonth" data-m="2">Mois 2 : Fluidité (B1)${!S.premium?lockIco():''}</button>
-    <button class="chip ${m===3?'on':''}" data-act="pmonth" data-m="3">Mois 3 : Maîtrise (B2–C1)${!S.premium?lockIco():''}</button>
+    ${MONTHS.map((x,i)=>`<button class="chip ${m===i+1?'on':''}" data-act="pmonth" data-m="${i+1}">Mois ${i+1} : ${x.t}${i&&!S.premium?lockIco():''}</button>`).join('')}
   </div>
   <p class="mut small" style="margin-bottom:14px">${monthDesc} ${!S.premium?'(Les 5 premiers jours sont gratuits pour tester la méthode.)':''}</p>
   <div class="road-grid">${cards}</div>`;
+};
+
+const DIALOGUES=[{id:"d1",t:"Acheter des vêtements",lv:"A2",lines:[{v:0,t:"Good morning! Can I help you?"},{v:1,t:"Yes, I'm looking for a blue shirt."},{v:0,t:"What size are you?"},{v:1,t:"Medium, I think. Can I try it on?"},{v:0,t:"Of course. The fitting room is on your left."},{v:1,t:"It fits well. How much is it?"},{v:0,t:"It's twenty dollars, but there's a ten percent discount today."}]},{id:"d2",t:"Au marché d'Abidjan",lv:"A2",lines:[{v:0,t:"How much are these mangoes?"},{v:1,t:"Five hundred francs for three."},{v:0,t:"That's expensive. Can you do four hundred?"},{v:1,t:"Okay, for you, four hundred."},{v:0,t:"Great. I'll take six, please."},{v:1,t:"Here you go. Thank you, madam!"}]},{id:"d3",t:"Assistance technique",lv:"B1",lines:[{v:0,t:"Hello, tech support. How can I help?"},{v:1,t:"My phone won't turn on after the update."},{v:0,t:"Have you tried charging it for thirty minutes?"},{v:1,t:"Yes, but the screen is still black."},{v:0,t:"Please hold the power button for ten seconds."},{v:1,t:"It's working! Thank you so much."}]},{id:"d4",t:"Parler à une IA",lv:"B1",lines:[{v:0,t:"Can you summarise this article for me?"},{v:1,t:"Sure. Do you want a short or detailed summary?"},{v:0,t:"Short, in five bullet points, please."},{v:1,t:"Here is your summary. Would you like me to translate it?"},{v:0,t:"Yes, into French, and keep it simple."},{v:1,t:"Done. Let me know if you need anything else."}]},{id:"d5",t:"Commander en ligne",lv:"B1",lines:[{v:0,t:"Hi, I ordered a laptop two weeks ago."},{v:1,t:"Let me check. What is your order number?"},{v:0,t:"It's 48213. It hasn't arrived yet."},{v:1,t:"I'm sorry for the delay. It will be delivered tomorrow."},{v:0,t:"Can I get a refund for the shipping?"},{v:1,t:"Yes, we'll refund it within three days."}]},{id:"d6",t:"Chez le vétérinaire",lv:"B1",lines:[{v:0,t:"My dog isn't eating and seems tired."},{v:1,t:"How long has he been like this?"},{v:0,t:"Since yesterday morning."},{v:1,t:"Let me examine him. He has a slight fever."},{v:0,t:"Is it serious?"},{v:1,t:"Not at all. Give him this medicine twice a day."}]},{id:"d7",t:"Entretien par téléphone",lv:"B2",lines:[{v:0,t:"Thank you for calling us back."},{v:1,t:"Of course. Could you tell me about your experience?"},{v:0,t:"I've worked in digital marketing for four years."},{v:1,t:"What would you say is your greatest strength?"},{v:0,t:"I adapt quickly and I enjoy learning new tools."},{v:1,t:"Great. We'll invite you for an interview next week."}]},{id:"d8",t:"Négocier un prix",lv:"B2",lines:[{v:0,t:"We're interested, but your price is above our budget."},{v:1,t:"What figure did you have in mind?"},{v:0,t:"Around twelve percent lower."},{v:1,t:"I can offer eight percent if you sign today."},{v:0,t:"If you include free delivery, we have a deal."},{v:1,t:"Agreed. I'll send the contract this afternoon."}]}];
+V.dialogues=()=>{
+  const o=DIALOGUES.find(x=>x.id===S.dlg.open);
+  if(o){
+    $('#view').innerHTML=`<button class="btn ghost sm" data-act="dback">← Tous les dialogues</button>
+    <div class="pagehead" style="margin-top:14px"><div class="row">${lvBadge(o.lv)}</div><h1 style="margin-top:8px">${esc(o.t)}</h1><p>Écoutez à deux voix, puis jouez l'un des rôles à voix haute.</p></div>
+    <div class="row" style="margin-bottom:14px"><button class="btn" data-act="dplay">▶ Écouter</button><button class="btn ghost" data-act="stop">Stop</button><button class="btn ghost" data-act="dhide">${S.dlg.hide?'Afficher le texte':'Masquer le texte (écoute seule)'}</button></div>
+    <div class="card" style="max-width:720px;display:grid;gap:10px">${o.lines.map(l=>`<div class="row" style="flex-wrap:nowrap;justify-content:${l.v?'flex-end':'flex-start'}"><div style="background:${l.v?'var(--amber-tint)':'var(--ultra-tint)'};padding:10px 14px;border-radius:14px;max-width:85%">${S.dlg.hide?'<span class="mut">• • •</span>':esc(l.t)}</div>${S.dlg.hide?'':spk(l.t,0.9)}</div>`).join('')}</div>`;return;
+  }
+  $('#view').innerHTML=head("Dialogues","Conversations réalistes à deux voix : shopping, technologie, IA, travail, négociation.")+`<div class="grid">${DIALOGUES.map(d=>`<button class="card tile" data-act="dopen" data-id="${d.id}"><span>${lvBadge(d.lv)}${lk('dlg',d.id)}</span><h3>${esc(d.t)}</h3><span class="mut small">${d.lines.length} répliques · audio</span></button>`).join('')}</div>`;
+};
+/* ============ Quiz ============ */
+const pickW=(pool,a,n=3)=>shuffle([...new Set(pool)].filter(x=>x!==a)).slice(0,n);
+const vq=(w,pool)=>{
+  const o=[Q('Que signifie « '+w[0]+' » ?',w[2],pickW(pool.map(x=>x[2]),w[2]),w[3]),Q('Comment dit-on « '+w[2]+' » en anglais ?',w[0],pickW(pool.map(x=>x[0]),w[0]),w[3])];
+  const re=new RegExp('\\b'+w[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\w*','i');
+  if(re.test(w[3]))o.push(Q('Complétez : '+w[3].replace(re,'_____'),w[0],pickW(pool.map(x=>x[0]),w[0]),'Traduction : '+w[2]));
+  return o;
+};
+const vsq=(it,pool)=>[Q(it[0]+'  Comment dit-on cela en anglais ?',it[1],pickW(pool.map(x=>x[1]),it[1]),it[2]),Q('Que veut dire « '+it[1]+' » ?',it[2],pickW(pool.map(x=>x[2]),it[2]),it[0])];
+V.quiz=()=>{
+  const r=S.qz.run;
+  if(r){
+    let qs;
+    if(r.kind==='v'){const w=VOCAB[r.k].words;qs=shuffle(w.flatMap(x=>vq(x,w))).slice(0,12);}
+    else if(r.kind==='vis'){const it=VISUAL[r.k].items;qs=shuffle(it.flatMap(x=>vsq(x,it))).slice(0,12);}
+    else{
+      const w=Object.entries(VOCAB).filter(([k])=>!isLocked('vocab',k)).flatMap(([,t])=>t.words);
+      const it=Object.entries(VISUAL).filter(([k])=>!isLocked('visCat',k)&&VISUAL[k].items).flatMap(([,t])=>t.items);
+      qs=shuffle([...shuffle(w).slice(0,14).flatMap(x=>vq(x,w)),...shuffle(it).slice(0,8).flatMap(x=>vsq(x,it))]).slice(0,20);
+    }
+    $('#view').innerHTML=`<div id="qzrun" class="card" style="max-width:720px"></div>`;
+    runQuiz($('#qzrun'),qs,{backLabel:'Retour aux quiz',onBack:()=>{S.qz.run=null;render(true);}});
+    return;
+  }
+  const nW=Object.values(VOCAB).reduce((a,t)=>a+t.words.length,0),nV=Object.values(VISUAL).reduce((a,t)=>a+(t.items?t.items.length:0),0);
+  $('#view').innerHTML=head("Quiz","Plus de "+(nW*3+nV*2)+" questions générées : sens des mots, traduction inverse, phrases à trous et reconnaissance d'images. Chaque série tire de nouvelles questions.")+
+  `<div class="card" style="margin-bottom:18px;display:flex;gap:14px;justify-content:space-between;align-items:center;flex-wrap:wrap"><div><h3>Défi mixte · 20 questions</h3><p class="small mut" style="margin:4px 0 0">Mots, phrases à trous et images mélangés${S.premium?' (tous les thèmes)':' (thèmes gratuits)'}.</p></div><button class="btn amber" data-act="qstart" data-kind="mix">Lancer le défi</button></div>
+  <h2>Quiz par thème de vocabulaire</h2><div class="tabs">${Object.entries(VOCAB).map(([k,t])=>`<button class="chip" data-act="qstart" data-kind="v" data-k="${k}">${t.label}${lk('vocab',k)}</button>`).join('')}</div>
+  <h2>Quiz visuels (images)</h2><div class="tabs">${Object.entries(VISUAL).filter(([,t])=>t.items).map(([k,t])=>`<button class="chip" data-act="qstart" data-kind="vis" data-k="${k}">${t.label}${lk('visCat',k)}</button>`).join('')}</div>`;
+};
+/* ============ Expressions ============ */
+V.phrases=()=>{
+  const k=S.phr.cat,c=PHRASES[k];
+  $('#view').innerHTML=head("Expressions du quotidien","Les phrases utiles par situation. Écoutez, répétez à voix haute, puis réutilisez-les dans l'atelier Speaking.")+
+  `<div class="tabs">${Object.entries(PHRASES).map(([id,p])=>`<button class="chip ${id===k?'on':''}" data-act="pcat" data-k="${id}">${p.label}${lk('phrase',id)}</button>`).join('')}</div>
+  <div class="grid">${c.items.map(p=>`<div class="card row" style="justify-content:space-between;flex-wrap:nowrap"><div><b>${esc(p[0])}</b><div class="small mut">${esc(p[1])}</div></div>${spk(p[0],0.9)}</div>`).join('')}</div>`;
+};
+/* ============ Progrès ============ */
+V.progress=()=>{
+  const n=S.daysDone.size,w=S.known.size,cur=n+1;
+  const lvl=levelOf(Math.max(1,n));
+  const bd=[[n>=1,'🌱','Premier pas','1 jour validé'],[n>=7,'🔥','Une semaine','7 jours validés'],[n>=30,'🥉','Mois 1','30 jours validés'],[n>=60,'🥈','Mois 2','60 jours validés'],[n>=90,'🏆','Trimestre 1','90 jours validés'],[n>=180,'🏅','6 mois','180 jours validés'],[n>=360,'👑','1 an complet','360 jours validés'],[w>=50,'📚','50 mots acquis','Vocabulaire'],[w>=100,'🎓','100 mots acquis','Vocabulaire'],[S.tests.length>=1,'✅','Premier test','Section Tests']];
+  let hm='';for(let d=1;d<=TOTAL;d++)hm+=`<button class="${S.daysDone.has(d)?'done':d===cur?'curr':''}" data-act="openday" data-d="${d}" aria-label="Jour ${d}">${d}</button>`;
+  $('#view').innerHTML=head("Mes progrès","Votre avancée sur les 90 jours, vos badges et votre niveau estimé.")+
+  `<div class="grid" style="margin-bottom:18px"><div class="card"><b style="font-size:28px;font-family:var(--serif)">${n}/${TOTAL}</b><div class="small mut">jours validés</div></div><div class="card"><b style="font-size:28px;font-family:var(--serif)">${w}</b><div class="small mut">mots acquis</div></div><div class="card"><b style="font-size:28px;font-family:var(--serif)">${lvl}</b><div class="small mut">niveau estimé</div></div></div>
+  <div class="card" style="margin-bottom:18px"><b>Carte des 12 mois</b><div class="hm">${hm}</div></div>
+  <h2>Badges</h2><div class="grid">${bd.map(b=>`<div class="badge ${b[0]?'':'off'}"><span>${b[1]}</span><div><b>${b[2]}</b><div class="small mut">${b[3]}</div></div></div>`).join('')}</div>`;
 };
 
 /* ============ Vocabulaire ============ */
@@ -1335,12 +1509,12 @@ const A={
  /* plan 90 jours */
  pmonth:t=>{
    const m=+t.dataset.m;
-   if(!S.premium && m>1)return paywall('Mois '+m+' du Parcours 90 Jours');
+   if(!S.premium && m>1)return paywall('Mois '+m+' du Parcours 12 Mois');
    S.plan.month=m;render();
  },
  openday:t=>{
    const d=+t.dataset.d;
-   if(!S.premium && d>CONFIG.free.daysMax)return paywall('Jour '+d+' du Parcours 90 Jours');
+   if(!S.premium && d>CONFIG.free.daysMax)return paywall('Jour '+d+' du Parcours 12 Mois');
    S.view='plan';S.plan.month=Math.ceil(d/30);S.plan.openDay=d;render(true);
  },
  dayback:()=>{S.plan.openDay=null;render(true);},
@@ -1429,6 +1603,18 @@ const A={
    if(m){S.vid.id=m[1];S.vid.msg='';}else{S.vid.msg="Lien non reconnu. Collez une adresse YouTube complète.";}
    render();
  },
+ /* nouveautés */
+ qstart:t=>{const kd=t.dataset.kind,k=t.dataset.k;
+   if(kd==='v'&&isLocked('vocab',k))return paywall('Ce quiz de vocabulaire');
+   if(kd==='vis'&&isLocked('visCat',k))return paywall('Ce quiz visuel');
+   S.qz.run={kind:kd,k};render(true);},
+ godlg:t=>{if(isLocked('dlg',t.dataset.id))return paywall('Ce dialogue');S.view='dialogues';S.plan.openDay=null;S.dlg.open=t.dataset.id;S.dlg.hide=false;render(true);},
+ dopen:t=>{if(isLocked('dlg',t.dataset.id))return paywall('Ce dialogue');S.dlg.open=t.dataset.id;S.dlg.hide=false;render(true);},
+ dback:()=>{S.dlg.open=null;render(true);},
+ dhide:()=>{S.dlg.hide=!S.dlg.hide;render();},
+ dplay:()=>{const o=DIALOGUES.find(x=>x.id===S.dlg.open);playLines(o.lines,0.95,()=>addXP(5));},
+ pcat:t=>{if(isLocked('phrase',t.dataset.k))return paywall('Ce pack d\'expressions');S.phr.cat=t.dataset.k;render();},
+ goread:t=>{if(isLocked('reading',t.dataset.id))return paywall('Ce texte de lecture');S.view='reading';S.plan.openDay=null;S.read.open=t.dataset.id;render(true);},
  /* premium & Mobile Money */
  paywall:t=>paywall(t.dataset.f||''),
  pwclose:()=>closePaywall(),
@@ -1440,12 +1626,14 @@ const A={
    const v=normCode($('#pwcode').value);
    if(v.length<6){$('#pwmsg').textContent="Saisissez votre code d'accès.";return;}
    // Vérification par empreinte ou codes maîtres
-   const masterCodes=['CLW2026VIP1','CLWWAVE5000','CLWOMCI2026','CLWGOLD9001','CLWPRO12026','CLWFAST3373','CLWABID2026','CLW90JSVIP8'];
-   if(CONFIG.codeHashes.includes(String(cyrb53(v))) || masterCodes.includes(v)){
-     S.premium=true;store.set(STORE_PREM,'1');closePaywall();toast('🎉 Félicitations ! Accès Premium activé.');render();
+   const hv=String(cyrb53(v));let used=[];try{used=JSON.parse(store.get(STORE_USED)||'[]');}catch(e){}
+   if(CONFIG.codeHashes.includes(hv)&&used.includes(hv)){$('#pwmsg').textContent="Ce code a déjà été utilisé sur cet appareil. Demandez un nouveau code pour renouveler.";return;}
+   if(CONFIG.codeHashes.includes(hv)){
+     used.push(hv);store.set(STORE_USED,JSON.stringify(used));
+     S.premium=true;store.set(STORE_PREM,'1');store.set(STORE_EXP,Date.now()+CONFIG.days*864e5);closePaywall();toast('🎉 Félicitations ! Accès Premium activé.');render();
    }else{$('#pwmsg').textContent="Code invalide. Vérifiez votre code ou contactez le +225 07 57 33 37 36.";}
  },
- premoff:()=>{S.premium=false;store.set(STORE_PREM,'0');toast('Premium désactivé sur cet appareil.');render(true);}
+ premoff:()=>{S.premium=false;store.set(STORE_PREM,'0');store.set(STORE_EXP,0);toast('Premium désactivé sur cet appareil.');render(true);}
 };
 
 document.addEventListener('click',e=>{
