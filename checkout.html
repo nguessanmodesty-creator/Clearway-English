@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#E5E0D5">
+<title>Transit — AETERNA</title>
+<meta name="description" content="Le transit AETERNA : une seule colonne, aucun détour. Votre demande d’acquisition est confirmée par l’atelier sous 24 heures.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/cormorant-garamond-300.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/aeterna.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header class="topbar">
+  <nav class="topbar__nav topbar__nav--start" aria-label="Navigation principale">
+    <a href="archive.html">Archive</a>
+  </nav>
+  <a class="topbar__logo" href="index.html" aria-label="AETERNA, accueil">AETERNA</a>
+  <div class="topbar__nav topbar__nav--end">
+    <a href="philosophy.html">Philosophie</a>
+    <a class="topbar__cart" href="checkout.html" aria-label="Panier"><span>Panier</span> <b data-cart-count>0</b></a>
+    <button class="menu-btn" type="button" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu"><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="glass-menu" id="menu" data-menu aria-label="Menu">
+  <div class="glass-menu__top">
+    <span class="eyebrow">AETERNA — Index</span>
+    <button class="glass-menu__close" type="button" data-menu-close>Fermer <span></span></button>
+  </div>
+  <nav aria-label="Menu principal">
+    <ul class="glass-menu__list">
+      <li><a href="index.html">Maison <small>01</small></a></li>
+      <li><a href="archive.html">Archive <small>02</small></a></li>
+      <li><a href="piece.html?id=anneau-basalte">Pièce en lumière <small>03</small></a></li>
+      <li><a href="philosophy.html">Philosophie <small>04</small></a></li>
+      <li><a href="checkout.html">Panier <small data-cart-count>0</small></a></li>
+    </ul>
+  </nav>
+  <div class="glass-menu__foot">
+    <p>Genève · Paris · Kyoto</p>
+    <p><a class="link-line" href="mailto:atelier@aeterna.example">atelier@aeterna.example</a></p>
+  </div>
+</div>
+
+<main id="main" class="checkout">
+  <section class="wrap" aria-labelledby="transit-title">
+    <p class="eyebrow">V — Transit</p>
+    <h1 class="h2" id="transit-title" data-track style="max-width:18ch;margin-top:14px">Le passage de la pièce à vous</h1>
+    <p class="lede" style="margin-top:18px">Zone sécurisée. Vos coordonnées servent uniquement à préparer l’écrin, l’assurance et la livraison assurée.</p>
+  </section>
+
+  <div class="wrap checkout__grid" style="padding-top:clamp(34px,4vw,60px)">
+    <div data-checkout-main>
+      <form class="checkout__form" data-form novalidate>
+        <fieldset class="fieldset">
+          <legend>Identité</legend>
+          <div class="field-row">
+            <div class="field">
+              <label for="first">Prénom</label>
+              <input id="first" name="first" type="text" autocomplete="given-name" required>
+              <p class="field__err" data-err="first"></p>
+            </div>
+            <div class="field">
+              <label for="last">Nom</label>
+              <input id="last" name="last" type="text" autocomplete="family-name" required>
+              <p class="field__err" data-err="last"></p>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="email">Courriel</label>
+              <input id="email" name="email" type="email" autocomplete="email" required>
+              <p class="field__err" data-err="email"></p>
+            </div>
+            <div class="field">
+              <label for="phone">Téléphone</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel">
+              <p class="field__err" data-err="phone"></p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend>Livraison</legend>
+          <div class="field">
+            <label for="address">Adresse</label>
+            <input id="address" name="address" type="text" autocomplete="street-address" required>
+            <p class="field__err" data-err="address"></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="zip">Code postal</label>
+              <input id="zip" name="zip" type="text" autocomplete="postal-code" required>
+              <p class="field__err" data-err="zip"></p>
+            </div>
+            <div class="field">
+              <label for="city">Ville</label>
+              <input id="city" name="city" type="text" autocomplete="address-level2" required>
+              <p class="field__err" data-err="city"></p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="country">Pays</label>
+            <select id="country" name="country" autocomplete="country-name" required>
+              <option value="">Choisir</option>
+              <option>Suisse</option>
+              <option>France</option>
+              <option>Belgique</option>
+              <option>Luxembourg</option>
+              <option>Monaco</option>
+              <option>Côte d’Ivoire</option>
+              <option>Sénégal</option>
+              <option>Autre</option>
+            </select>
+            <p class="field__err" data-err="country"></p>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend>Note à l’atelier</legend>
+          <div class="field">
+            <label for="note">Message (facultatif)</label>
+            <input id="note" name="note" type="text" placeholder="Gravure, taille de bague, date souhaitée…">
+          </div>
+        </fieldset>
+
+        <div style="display:grid;gap:16px;justify-items:start">
+          <button class="btn btn--solid" type="submit" data-submit>Confirmer la demande</button>
+          <p class="small" style="margin:0;max-width:46ch">Aucun prélèvement n’est effectué ici. L’atelier vous contacte sous 24 heures ouvrées pour le règlement, l’assurance et la remise en main propre ou livraison assurée.</p>
+        </div>
+      </form>
+    </div>
+
+    <aside class="summary" aria-label="Votre sélection">
+      <h2>Sélection</h2>
+      <div data-cart-lines></div>
+      <div class="totals" data-totals></div>
+      <p class="small" style="margin:0">Écrin de basalte, certificat d’origine et livraison assurée inclus.</p>
+    </aside>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__top">
+      <div class="footer__col footer__col--wide">
+        <h2>Maison</h2>
+        <p>AETERNA façonne des pièces uniques en or recyclé et pierres traçables, à Genève et à Paris, depuis 2019.</p>
+      </div>
+      <div class="footer__col">
+        <h2>Archive</h2>
+        <a href="archive.html">Toutes les pièces</a>
+        <a href="archive.html">Collections</a>
+        <a href="checkout.html">Panier</a>
+      </div>
+      <div class="footer__col">
+        <h2>Maison</h2>
+        <a href="philosophy.html">Philosophie</a>
+        <a href="philosophy.html#origines">Origines</a>
+        <a href="mailto:atelier@aeterna.example">Contact</a>
+      </div>
+      <div class="footer__col">
+        <h2>Atelier</h2>
+        <p>Rue des Corps-Saints 12<br>1204 Genève</p>
+        <p>Sur rendez-vous</p>
+      </div>
+    </div>
+    <span class="footer__word" aria-hidden="true">AETERNA</span>
+    <div class="footer__base">
+      <span>© 2026 AETERNA — Haute joaillerie éthique</span>
+      <span>Genève · Paris · Kyoto</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/checkout.js"></script>
+</body>
+</html>
